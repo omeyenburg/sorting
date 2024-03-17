@@ -9,6 +9,7 @@ from algorithms.bogo_sort import BogoSort
 import pygame.freetype
 import pygame
 import math
+import time
 
 
 class Page:
@@ -87,7 +88,8 @@ class Button:
         text_rect = window.font.get_rect(self.text, size=self.size)
         dest = (rect.centerx - text_rect[2] //
                 2, rect.centery - text_rect[3] // 2)
-        window.font.render_to(window.window, dest, self.text, size=self.size)
+        window.font.render_to(window.window, dest, self.text,
+                              size=self.size, fgcolor=(255, 255, 255))
 
 
 class Slider:
@@ -190,6 +192,8 @@ class SortingChart:
         if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
             self.cooldown = 0
             self.algorithm.sort(self.array)
+            if self.algorithm.done:
+                self.sorted = True
 
         bar_width = (window.size[0] - 250) // len(self.array)
         bar_height = (window.size[1] - 10) // len(self.array)
@@ -206,7 +210,8 @@ class SortingChart:
             pygame.draw.rect(
                 window.window,
                 color,
-                (245 + bar_width * 0.1 + i * bar_width, window.size[1] - 5 - bar_height * (x + 1), bar_width * 0.9, bar_height * (x + 1))
+                (245 + bar_width * 0.1 + i * bar_width,
+                 window.size[1] - 5 - bar_height * (x + 1), bar_width * 0.9, bar_height * (x + 1))
             )
 
 
@@ -222,18 +227,11 @@ class Window:
         self.clicked = False
         pygame.display.set_caption(title)
 
-        #self.iterations = 0
-        #self.algorithm = SelectionSort()
-        #self.timer = 0
-        #self.paused = True
-        #self.done = False
-        #self.speed = 200
-        #self.button_cooldown = 0
-
         self.page_sorting = Page()
         self.page_options = Page()
         self.opened_page = self.page_options
         self.sorting_chart = SortingChart(range(20), SelectionSort)
+        self.measure_label = Label("N/A", pos=(0.015, 0.5))
 
         self.page_sorting.add_widgets(
             Button(
@@ -252,6 +250,12 @@ class Window:
                 self.sorting_chart.reset,
                 pos=(0.015, 0.23)
             ),
+            Button(
+                "Measure Time",
+                self.measure,
+                pos=(0.015, 0.43)
+            ),
+            self.measure_label,
             self.sorting_chart,
         )
 
@@ -263,7 +267,8 @@ class Window:
             Label("Speed", pos=(0.65, 0.3)),
             Slider(0, 400, 200, (0.8, 0.32), self.sorting_chart.set_speed),
             Label("Numbers", pos=(0.65, 0.4)),
-            Slider(1, 100, 20, (0.8, 0.42), self.sorting_chart.set_values, show=True, integer=True),
+            Slider(1, 100, 20, (0.8, 0.42),
+                   self.sorting_chart.set_values, show=True, integer=True),
 
             Button(
                 "Done",
@@ -282,13 +287,31 @@ class Window:
             )
             self.page_options.add_widget(button)
 
+    def measure(self):
+        array = self.sorting_chart.array[:]
+
+        start = time.time()
+        n = 1000
+        for i in range(n):
+            self.sorting_chart.algorithm.shuffle(array)
+            self.sorting_chart.algorithm.reset()
+            iterations = 0
+            while not self.sorting_chart.algorithm.done:
+                self.sorting_chart.algorithm.sort(array)
+                iterations += 1
+                if iterations > 1000:
+                    n -= 1
+                    break
+        end = time.time()
+
+        if not n:
+            self.measure_label.text = "Time limit exceeded"
+            return
+
+        self.measure_label.text = f"{(end - start) / n * 1000:3f}ms"
     def open_page(self, page):
         self.opened_page = page
-
-    #def reset(self):
-    #    self.iterations = 0
-    #    self.done = False
-    #    self.paused = True
+        self.measure_label.text = "N/A"
 
     def events(self):
         if self.clicked:
@@ -325,129 +348,10 @@ class Window:
             pygame.draw.circle(self.window, (0, 0, 0), center, radius // 1.5)
             """
 
-            # Buttons
-            """
-            # Draw buttons
-            buttons = [
-                "Fps: " + str(round(self.clock.get_fps())),
-                "",
-                "> Selection Sort",
-                "> Insertion Sort",
-                "> Bubble Sort",
-                "> Quick Sort",
-                "> Bogo Sort",
-                "",
-                "> Iterate",
-                "> Play",
-                "> Measure",
-                "> Randomize",
-                "> Increase Speed",
-                "> Decrease Speed",
-                "",
-                "Stats:",
-                " Iterations: " + str(self.iterations),
-            ]
-            if isinstance(self.algorithm, SelectionSort):
-                buttons[2] = "-" + buttons[2][1:]
-            elif isinstance(self.algorithm, InsertionSort):
-                buttons[3] = "-" + buttons[3][1:]
-            elif isinstance(self.algorithm, BubbleSort):
-                buttons[4] = "-" + buttons[4][1:]
-            elif isinstance(self.algorithm, QuickSort):
-                buttons[5] = "-" + buttons[5][1:]
-            elif isinstance(self.algorithm, BogoSort):
-                buttons[6] = "-" + buttons[6][1:]
-
-            if not self.paused:
-                buttons[9] = "> Pause"
-
-            self.button_cooldown += 1
-            for i, text in enumerate(buttons):
-                color = (255, 255, 255)
-
-                if text and text[0] == ">":
-                    m = pygame.mouse.get_pos()
-                    hover = m[0] < 100 and i < (m[1] - 10) / 20 < i + 1
-                    if hover:
-                        color = (200, 200, 200)
-
-                    mouse_pressed = pygame.mouse.get_pressed()[0]
-                    if self.button_cooldown > 10 and mouse_pressed and hover:
-                        self.button_cooldown = 0
-                        if text == "> Selection Sort":
-                            self.algorithm = SelectionSort()
-                            self.reset()
-                        elif text == "> Insertion Sort":
-                            self.algorithm = InsertionSort()
-                            self.reset()
-                        elif text == "> Bubble Sort":
-                            self.algorithm = BubbleSort()
-                            self.reset()
-                        elif text == "> Quick Sort":
-                            self.algorithm = QuickSort()
-                            self.reset()
-                        elif text == "> Bogo Sort":
-                            self.algorithm = BogoSort()
-                            self.reset()
-                        elif text == "> Iterate":
-                            self.iter()
-                            self.paused = True
-                        elif text == "> Play":
-                            self.paused = False
-                        elif text == "> Pause":
-                            self.paused = True
-                        elif text == "> Randomize":
-                            SelectionSort.shuffle(self.array)
-                            self.algorithm.reset()
-                            self.reset()
-                        elif text == "> Increase Speed":
-                            self.speed = max(10, self.speed - 10)
-                        elif text == "> Decrease Speed":
-                            self.speed += 10
-
-                self.font.render_to(
-                    self.window,
-                    (10, 10 + 20 * i),
-                    text,
-                    color
-                )
-            """
-
-            """
-            # Draw chart
-            for i, x in enumerate(self.array):
-                if i == self.algorithm.highlight_sorting:
-                    color = (100, 255, 150)
-                elif i == self.algorithm.highlight_comparing:
-                    color = (255, 150, 200)
-                elif i in self.algorithm.highlight_sorted:
-                    color = (200, 200, 200)
-                else:
-                    color = (100, 100, 100)
-                pygame.draw.rect(
-                    self.window,
-                    color,
-                    (205 + i * 25, self.size[1] - 5 - 20 * x, 20, 20 * x)
-                )
-            """
-
             # Update display
             pygame.display.flip()
             self.sorting_chart.cooldown += self.clock.tick(60)
 
-            # Sorting iteration
-            #if self.timer > self.speed:
-            #    self.timer = 0
-            #    if not (self.paused or self.done):
-            #        self.iter()
-    """
-    def iter(self):
-        self.algorithm.sort(self.array)
-        if self.algorithm.done:
-            self.done = True
-            return
-        self.iterations += 1
-    """
 
 if __name__ == "__main__":
     Window("Sorting Algorithms", 20).run()

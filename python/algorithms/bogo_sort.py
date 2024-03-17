@@ -7,6 +7,7 @@ class BogoSort(BaseSort):
         self.reset()
 
     def reset(self):
+        self.done = False
         self.highlight_sorting = -1
         self.highlight_comparing = -1
         self.highlight_sorted = set()

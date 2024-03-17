@@ -54,6 +54,7 @@ class TreeSort(BaseSort):
         self.index = 0
         self.tree = BinarySortTree()
 
+        self.done = False
         self.highlight_sorting = -1
         self.highlight_comparing = -1
         self.highlight_sorted = set()

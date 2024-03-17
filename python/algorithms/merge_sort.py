@@ -10,6 +10,7 @@ class MergeSort(BaseSort):
         self.index = 0
         self.parts = []
 
+        self.done = False
         self.highlight_sorting = -1
         self.highlight_comparing = -1
         self.highlight_sorted = set()

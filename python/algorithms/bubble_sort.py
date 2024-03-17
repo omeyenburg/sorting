@@ -9,6 +9,8 @@ class BubbleSort(BaseSort):
     def reset(self):
         self.index = 0
         self.count = 0
+
+        self.done = False
         self.highlight_sorting = -1
         self.highlight_comparing = -1
         self.highlight_sorted = set()
