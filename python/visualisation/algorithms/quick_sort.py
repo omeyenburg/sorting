@@ -17,6 +17,8 @@ class QuickSort(BaseSort):
     def sort(self, array):
         if self.index == len(array):
             self.done = True
+            self.highlight_sorting = -1
+            self.highlight_sorted = set()
             return
 
         if not self.parts:
@@ -38,3 +40,6 @@ class QuickSort(BaseSort):
             self.parts = self.parts[:self.index] + [[pivot], greater] + self.parts[self.index+1:]
 
         array[:] = [x for y in self.parts for x in y]
+
+        self.highlight_sorting = array.index(pivot)
+        self.highlight_sorted = range(self.highlight_sorting - len(smaller), self.highlight_sorting + len(greater))

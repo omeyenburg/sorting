@@ -15,20 +15,16 @@ class MergeSort(BaseSort):
         self.highlight_sorted = set()
 
     def sort(self, array):
-        print(self.parts)
         if len(self.parts) == 1:
             self.done = True
+            self.highlight_sorted = set()
             return
 
         if not self.parts:
             self.parts = [[x] for x in array]
         
-        print(self.parts)
-        
         part_a = self.parts[self.index]
         part_b = self.parts[self.index + 1]
-
-        print(part_a, part_b)
 
         part = []
         for i in range(len(part_a) + len(part_b)):
@@ -45,3 +41,4 @@ class MergeSort(BaseSort):
             self.index = 0
 
         array[:] = [x for y in self.parts for x in y]
+        self.highlight_sorted = range(array.index(part[0]), array.index(part[-1]) + 1)
