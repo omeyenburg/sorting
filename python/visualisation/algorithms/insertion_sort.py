@@ -19,17 +19,14 @@ class InsertionSort(BaseSort):
             self.highlight_comparing = -1
             return
 
-        x = array[self.index]
-        goal = 0
-        for i in range(self.index + 1):
-            if x <= array[i]:
-                goal = i
-                break
-
-        array.remove(x)
-        array[:] = array[:goal] + [x] + array[goal:]
+        value = array[self.index]
+        i = self.index
+        while i > 0 and array[i - 1] > value:
+            array[i] = array[i - 1]
+            i -= 1
+        array[i] = value
         self.index += 1
 
-        self.highlight_sorting = goal
+        self.highlight_sorting = i
         self.highlight_comparing = self.index - 1
         self.highlight_sorted = range(self.index, len(array))
