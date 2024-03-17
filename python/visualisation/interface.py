@@ -145,9 +145,14 @@ class SortingChart:
         self.algorithm = algorithm()
         self.sorted = False
         self.paused = True
+        self.iteration_delay = 400
+        self.cooldown = 0
 
         self.array = [i for i in values]
         # self.algorithm.shuffle(self.array)
+
+    def set_speed(self, value):
+        self.iteration_delay = 400 - min(400, value)
 
     def set_values(self, value_count):
         self.values = range(value_count)
@@ -182,7 +187,8 @@ class SortingChart:
         self.algorithm = algorithm()
 
     def update(self, window):
-        if not (self.paused or self.sorted):
+        if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
+            self.cooldown = 0
             self.algorithm.sort(self.array)
 
         bar_width = (window.size[0] - 250) // len(self.array)
@@ -216,13 +222,13 @@ class Window:
         self.clicked = False
         pygame.display.set_caption(title)
 
-        self.iterations = 0
-        self.algorithm = SelectionSort()
-        self.timer = 0
-        self.paused = True
-        self.done = False
-        self.speed = 300
-        self.button_cooldown = 0
+        #self.iterations = 0
+        #self.algorithm = SelectionSort()
+        #self.timer = 0
+        #self.paused = True
+        #self.done = False
+        #self.speed = 200
+        #self.button_cooldown = 0
 
         self.page_sorting = Page()
         self.page_options = Page()
@@ -255,7 +261,7 @@ class Window:
 
             Label("Options", center=(0.8, 0.2)),
             Label("Speed", pos=(0.65, 0.3)),
-            Slider(10, 390, 200, (0.8, 0.32), print),
+            Slider(0, 400, 200, (0.8, 0.32), self.sorting_chart.set_speed),
             Label("Numbers", pos=(0.65, 0.4)),
             Slider(1, 100, 20, (0.8, 0.42), self.sorting_chart.set_values, show=True, integer=True),
 
@@ -279,10 +285,10 @@ class Window:
     def open_page(self, page):
         self.opened_page = page
 
-    def reset(self):
-        self.iterations = 0
-        self.done = False
-        self.paused = True
+    #def reset(self):
+    #    self.iterations = 0
+    #    self.done = False
+    #    self.paused = True
 
     def events(self):
         if self.clicked:
@@ -427,21 +433,21 @@ class Window:
 
             # Update display
             pygame.display.flip()
-            self.timer += self.clock.tick(30)
+            self.sorting_chart.cooldown += self.clock.tick(60)
 
             # Sorting iteration
-            if self.timer > self.speed:
-                self.timer = 0
-                if not (self.paused or self.done):
-                    self.iter()
-
+            #if self.timer > self.speed:
+            #    self.timer = 0
+            #    if not (self.paused or self.done):
+            #        self.iter()
+    """
     def iter(self):
         self.algorithm.sort(self.array)
         if self.algorithm.done:
             self.done = True
             return
         self.iterations += 1
-
+    """
 
 if __name__ == "__main__":
     Window("Sorting Algorithms", 20).run()
