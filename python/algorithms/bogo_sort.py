@@ -5,6 +5,7 @@ class BogoSort(BaseSort):
     def __init__(self):
         super().__init__()
         self.reset()
+        self.limit = 1000
 
     def reset(self):
         self.done = False
@@ -12,15 +13,18 @@ class BogoSort(BaseSort):
         self.highlight_comparing = -1
         self.highlight_sorted = set()
 
-    def sort(self, array):
-        last = array[0] - 1
-        for x in array:
-            if x < last:
-                break
-            last = x
-        else:
+    def iter(self, array):
+        if self.is_sorted(array):
             self.done = True
             return
 
         self.shuffle(array)
-        return
+    
+    def sort(self, array):
+        for i in range(self.limit):
+            if self.is_sorted(array):
+                self.done = True
+                return i
+
+            self.shuffle(array)
+        return 1000

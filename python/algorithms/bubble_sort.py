@@ -15,7 +15,7 @@ class BubbleSort(BaseSort):
         self.highlight_comparing = -1
         self.highlight_sorted = set()
 
-    def sort(self, array):
+    def iter(self, array):
         if self.count == len(array) - 1:
             self.done = True
             self.highlight_sorting = -1
@@ -34,3 +34,14 @@ class BubbleSort(BaseSort):
         if self.index + 1 == len(array) - self.count:
             self.index = 0
             self.count += 1
+
+    def sort(self, array):
+        iterations = 0
+
+        for i in range(1, len(array)):
+            for j in range(len(array) - i):
+                if array[j] > array[j + 1]:
+                    self.swap(array, j, j + 1)
+                iterations += 1
+        
+        return iterations

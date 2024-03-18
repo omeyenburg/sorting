@@ -14,7 +14,7 @@ class SelectionSort(BaseSort):
         self.highlight_comparing = -1
         self.highlight_sorted = set()
 
-    def sort(self, array):
+    def iter(self, array):
         if self.index == len(array):
             self.done = True
             self.highlight_sorting = -1
@@ -33,3 +33,20 @@ class SelectionSort(BaseSort):
         self.highlight_sorting = self.index
         self.highlight_comparing = lowest_index
         self.highlight_sorted = range(self.index, len(array))
+
+    def sort(self, array):
+        iterations = 0
+
+        for i, a in enumerate(array):
+            lowest_index = i
+            lowest_value = a
+
+            for j, b in enumerate(array[i:]):
+                if b < lowest_value:
+                    lowest_index = i + j
+                    lowest_value = b
+                iterations += 1
+            
+            self.swap(array, i, lowest_index)
+        return iterations
+                

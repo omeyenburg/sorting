@@ -41,8 +41,9 @@ class Label:
         else:
             dest = (self.center[0] * window.size[0] - text_rect[2] / 2,
                     self.center[1] * window.size[1] - text_rect[3] / 2)
-        window.font.render_to(window.window, dest, self.text,
-                              (255, 255, 255), size=self.size)
+        for i, line in enumerate(self.text.split("\n")):
+            window.font.render_to(window.window, (dest[0], dest[1] + 20 * i), line,
+                                  (255, 255, 255), size=self.size)
 
 
 class Button:
@@ -191,7 +192,7 @@ class SortingChart:
     def update(self, window):
         if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
             self.cooldown = 0
-            self.algorithm.sort(self.array)
+            self.algorithm.iter(self.array)
             if self.algorithm.done:
                 self.sorted = True
 
@@ -290,25 +291,30 @@ class Window:
     def measure(self):
         array = self.sorting_chart.array[:]
 
+        if isinstance(self.sorting_chart.algorithm, BogoSort):
+            n = 10
+        else:
+            n = 10000
+        total_iterations = 0
+
         start = time.time()
-        n = 1000
+
         for i in range(n):
             self.sorting_chart.algorithm.shuffle(array)
             self.sorting_chart.algorithm.reset()
-            iterations = 0
-            while not self.sorting_chart.algorithm.done:
-                self.sorting_chart.algorithm.sort(array)
-                iterations += 1
-                if iterations > 1000:
-                    n -= 1
-                    break
+            iterations = self.sorting_chart.algorithm.sort(array)
+            if iterations == 1000:
+                n -= 1
+            total_iterations += iterations
+
         end = time.time()
 
         if not n:
             self.measure_label.text = "Time limit exceeded"
             return
 
-        self.measure_label.text = f"{(end - start) / n * 1000:3f}ms"
+        self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}"
+
     def open_page(self, page):
         self.opened_page = page
         self.measure_label.text = "N/A"

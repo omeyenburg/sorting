@@ -13,6 +13,14 @@ class BaseSort:
         array[first] = array[second]
         array[second] = a
 
+    def is_sorted(self, array):
+        last = array[0] - 1
+        for x in array:
+            if x < last:
+                return False
+            last = x
+        return True
+
     @staticmethod
     def shuffle(array):
         for i in range(len(array) - 1):

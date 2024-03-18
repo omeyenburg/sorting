@@ -59,7 +59,7 @@ class TreeSort(BaseSort):
         self.highlight_comparing = -1
         self.highlight_sorted = set()
 
-    def sort(self, array):
+    def iter(self, array):
         if self.index == len(array):
             self.done = True
             self.highlight_sorting = -1
@@ -72,4 +72,11 @@ class TreeSort(BaseSort):
         self.index += 1
 
         self.highlight_sorting = array.index(value)
-        self.highlight_sorted = range(self.index)
+        self.highlight_sorted = range(self.index, len(array))
+
+    def sort(self, array):
+        for value in array:
+            self.tree.append(value)
+
+        array[:] = self.tree.array()
+        return len(array)
