@@ -104,6 +104,12 @@ class Slider:
         self.clicked = False
         self.show = show
         self.integer = integer
+        if self.integer is True:
+            self.value = round(self.value)
+            self.float_value = ((self.value - self.start) /
+                                (self.end - self.start))
+        elif not self.integer is False:
+            self.value = self.integer(round(self.value))
 
     def update(self, window):
         rect = self.pos[0] * window.size[0], self.pos[1] * \
@@ -127,10 +133,12 @@ class Slider:
                 1, max(0, (mouse_pos[0] + self.clicked[0] - rect[0]) / rect[2]))
             self.value = (self.start + self.float_value *
                           (self.end - self.start))
-            if self.integer:
+            if self.integer is True:
                 self.value = round(self.value)
                 self.float_value = ((self.value - self.start) /
                                     (self.end - self.start))
+            elif not self.integer is False:
+                self.value = self.integer(round(self.value))
             color = (200, 200, 200)
         else:
             color = (150, 150, 150)
@@ -150,9 +158,7 @@ class SortingChart:
         self.paused = True
         self.iteration_delay = 400
         self.cooldown = 0
-
         self.array = [i for i in values]
-        # self.algorithm.shuffle(self.array)
 
     def set_speed(self, value):
         self.iteration_delay = 400 - min(400, value)
@@ -233,6 +239,7 @@ class Window:
         self.opened_page = self.page_options
         self.sorting_chart = SortingChart(range(20), SelectionSort)
         self.measure_label = Label("N/A", pos=(0.015, 0.5))
+        self.measure_count = 10
 
         self.page_sorting.add_widgets(
             Button(
@@ -270,6 +277,8 @@ class Window:
             Label("Numbers", pos=(0.65, 0.4)),
             Slider(1, 100, 20, (0.8, 0.42),
                    self.sorting_chart.set_values, show=True, integer=True),
+            Label("Measure Count", pos=(0.65, 0.5)),
+            Slider(0, 4, 1, (0.8, 0.52), self.set_measure_count, show=True, integer=lambda x: 10**x),
 
             Button(
                 "Done",
@@ -288,22 +297,28 @@ class Window:
             )
             self.page_options.add_widget(button)
 
-    def measure(self):
-        array = self.sorting_chart.array[:]
+    def set_measure_count(self, value):
+        self.measure_count = value
 
-        if isinstance(self.sorting_chart.algorithm, BogoSort):
+    def measure(self):
+        length = self.measure_count
+        array = [x for x in range(length)]
+
+        if isinstance(self.sorting_chart.algorithm, BogoSort) or length >= 10000:
             n = 10
+        elif length >= 1000:
+            n = 100
         else:
-            n = 10000
+            n = 1000
         total_iterations = 0
 
         start = time.time()
 
-        for i in range(n):
+        for _ in range(n):
             self.sorting_chart.algorithm.shuffle(array)
             self.sorting_chart.algorithm.reset()
             iterations = self.sorting_chart.algorithm.sort(array)
-            if iterations == 1000:
+            if iterations == 2*length:
                 n -= 1
             total_iterations += iterations
 
