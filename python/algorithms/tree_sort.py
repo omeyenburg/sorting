@@ -79,4 +79,4 @@ class TreeSort(BaseSort):
             self.tree.append(value)
 
         array[:] = self.tree.array()
-        return len(array)
+        return 0

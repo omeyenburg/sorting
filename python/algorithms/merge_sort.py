@@ -69,3 +69,36 @@ class MergeSort(BaseSort):
         
         array[:] = [x for y in self.parts for x in y]
         return iterations
+    
+    def merge_sort(self, array):
+        length = len(array)
+
+        if length == 1:
+            return array
+        
+        if length == 2:
+            if array[0] > array[1]:
+                self.swap(array, 0, 1)
+            return array
+
+        center = length // 2
+
+        a = self.merge_sort(array[:center])
+        b = self.merge_sort(array[center:])
+        a_i = 0
+        b_i = 0
+
+        array.clear()
+        while a_i + b_i < length:
+            if a_i < center and (b_i >= length - center or a[a_i] < b[b_i]):
+                array.append(a[a_i])
+                a_i += 1
+            else:
+                array.append(b[b_i])
+                b_i += 1
+        
+        return array
+
+    def sort(self, array):
+        self.merge_sort(array)
+        return 0

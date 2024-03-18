@@ -70,4 +70,24 @@ class QuickSort(BaseSort):
 
         array[:] = [x for y in parts for x in y]
         return iterations
+    
+    def quick_sort(self, array):
+        if len(array) <= 1:
+            return array
+
+        pivot = array[0]
+        smaller = []
+        greater = []
+        for x in array[1:]:
+            if x <= pivot:
+                smaller.append(x)
+            else:
+                greater.append(x)
+
+        return self.quick_sort(smaller) + [pivot] + self.quick_sort(greater)
+
+    def sort(self, array):
+        self.quick_sort(array)
+        return 0
+
 

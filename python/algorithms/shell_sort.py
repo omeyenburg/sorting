@@ -38,9 +38,10 @@ class ShellSort(BaseSort):
         self.column_index += 1
 
     def sort(self, array):
-        iterations = 0
-        columns = (2147483647, 1131376761, 410151271, 157840433, 58548857, 21521774, 8810089, 3501671,
-                   1355339, 543749, 213331, 84801, 27901, 11969, 4711, 1968, 815, 271, 111, 41, 13, 4, 1)
+        #iterations = 0
+        #columns = (2147483647, 1131376761, 410151271, 157840433, 58548857, 21521774, 8810089, 3501671,
+        #           1355339, 543749, 213331, 84801, 27901, 11969, 4711, 1968, 815, 271, 111, 41, 13, 4, 1)
+        columns = (213331, 84801, 27901, 11969, 4711, 1968, 815, 271, 111, 41, 13, 4, 1)
     
         for column in columns:
             for i in range(len(array)):
@@ -50,10 +51,10 @@ class ShellSort(BaseSort):
                 while j >= column and array[j - column] > value:
                     array[j] = array[j - column]
                     j -= column
-                    iterations += 1
+                    #iterations += 1
 
                 array[j] = value
 
-        return iterations
+        return 0#iterations
 
 

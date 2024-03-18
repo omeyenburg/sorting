@@ -34,15 +34,12 @@ class InsertionSort(BaseSort):
         self.highlight_sorted = range(self.index, len(array))
 
     def sort(self, array):
-        iterations = 0
-
         for i, value in enumerate(array):
             j = i
             while j > 0 and array[j - 1] > value:
                 array[i] = array[j - 1]
                 j -= 1
-                iterations += 1
 
             array[j] = value
         
-        return iterations
+        return 0

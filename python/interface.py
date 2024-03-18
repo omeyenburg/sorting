@@ -182,18 +182,15 @@ class SortingChart:
     @staticmethod
     def get_algorithms():
         return {
-            "Selection Sort": SelectionSort,
-            "Insertion Sort": InsertionSort,
-            "Bubble Sort": BubbleSort,
-            "Quick Sort": QuickSort,
-            "Shell Sort": ShellSort,
-            "Merge Sort": MergeSort,
-            "Tree Sort": TreeSort,
-            "Bogo Sort": BogoSort,
+            SelectionSort: "Selection Sort",
+            InsertionSort: "Insertion Sort",
+            BubbleSort: "Bubble Sort",
+            QuickSort: "Quick Sort",
+            ShellSort: "Shell Sort",
+            MergeSort: "Merge Sort",
+            TreeSort: "Tree Sort",
+            BogoSort: "Bogo Sort",
         }
-
-    def set_algorithm(self, algorithm):
-        self.algorithm = algorithm()
 
     def update(self, window):
         if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
@@ -223,7 +220,7 @@ class SortingChart:
 
 
 class Window:
-    def __init__(self, title, n):
+    def __init__(self):
         pygame.init()
 
         info = pygame.display.Info()
@@ -232,36 +229,39 @@ class Window:
         self.clock = pygame.time.Clock()
         self.font = pygame.freetype.SysFont(None, 15)
         self.clicked = False
-        pygame.display.set_caption(title)
+        pygame.display.set_caption("Sorting Algorithms")
 
         self.page_sorting = Page()
         self.page_options = Page()
         self.opened_page = self.page_options
         self.sorting_chart = SortingChart(range(20), SelectionSort)
-        self.measure_label = Label("N/A", pos=(0.015, 0.5))
+
+        self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
+        self.measure_label = Label("N/A", pos=(0.015, 0.55))
         self.measure_count = 10
 
         self.page_sorting.add_widgets(
+            self.algorithm_label,
             Button(
                 "Options",
                 lambda: (self.open_page(self.page_options),
                          self.sorting_chart.set_paused(True)),
-                pos=(0.015, 0.03)
+                pos=(0.015, 0.13)
             ),
             Button(
                 "Play/Pause",
                 self.sorting_chart.toggle_pause,
-                pos=(0.015, 0.13)
+                pos=(0.015, 0.23)
             ),
             Button(
                 "Randomize",
                 self.sorting_chart.reset,
-                pos=(0.015, 0.23)
+                pos=(0.015, 0.33)
             ),
             Button(
                 "Measure Time",
                 self.measure,
-                pos=(0.015, 0.43)
+                pos=(0.015, 0.48)
             ),
             self.measure_label,
             self.sorting_chart,
@@ -272,13 +272,14 @@ class Window:
             Label("Algorithm", center=(0.3, 0.2)),
 
             Label("Options", center=(0.8, 0.2)),
-            Label("Speed", pos=(0.65, 0.3)),
-            Slider(0, 400, 200, (0.8, 0.32), self.sorting_chart.set_speed),
-            Label("Numbers", pos=(0.65, 0.4)),
-            Slider(1, 100, 20, (0.8, 0.42),
+            Label("Sorting Speed", pos=(0.65, 0.3)),
+            Slider(0, 400, 200, (0.65, 0.37), self.sorting_chart.set_speed),
+            Label("Sorting Numbers", pos=(0.65, 0.5)),
+            Slider(1, 100, 20, (0.65, 0.57),
                    self.sorting_chart.set_values, show=True, integer=True),
-            Label("Measure Count", pos=(0.65, 0.5)),
-            Slider(0, 4, 1, (0.8, 0.52), self.set_measure_count, show=True, integer=lambda x: 10**x),
+            Label("Measure Numbers", pos=(0.65, 0.7)),
+            Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
+                   show=True, integer=lambda x: 10 ** x),
 
             Button(
                 "Done",
@@ -287,10 +288,10 @@ class Window:
             )
         )
 
-        for i, (name, algorithm) in enumerate(SortingChart.get_algorithms().items()):
+        for i, (algorithm, name) in enumerate(SortingChart.get_algorithms().items()):
             button = Button(
                 name,
-                lambda a=algorithm: self.sorting_chart.set_algorithm(a),
+                lambda a=algorithm: self.set_algorithm(a),
                 center=(0.15 + 0.3 * (i % 2), 0.3 + 0.09 * (i // 2)),
                 keep=True,
                 toggled=isinstance(self.sorting_chart.algorithm, algorithm)
@@ -304,7 +305,9 @@ class Window:
         length = self.measure_count
         array = [x for x in range(length)]
 
-        if isinstance(self.sorting_chart.algorithm, BogoSort) or length >= 10000:
+        if length >= 100000:
+            n = 3
+        elif isinstance(self.sorting_chart.algorithm, BogoSort) or length >= 10000:
             n = 10
         elif length >= 1000:
             n = 100
@@ -328,7 +331,14 @@ class Window:
             self.measure_label.text = "Time limit exceeded"
             return
 
-        self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}"
+        if total_iterations:
+            self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}"
+        else:
+            self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms"
+
+    def set_algorithm(self, algorithm):
+        self.algorithm_label.text = self.sorting_chart.get_algorithms()[algorithm]
+        self.sorting_chart.algorithm = algorithm()
 
     def open_page(self, page):
         self.opened_page = page
@@ -375,4 +385,4 @@ class Window:
 
 
 if __name__ == "__main__":
-    Window("Sorting Algorithms", 20).run()
+    Window().run()
