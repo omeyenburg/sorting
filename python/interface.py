@@ -4,6 +4,7 @@ from algorithms.bubble_sort import BubbleSort
 from algorithms.quick_sort import QuickSort
 from algorithms.shell_sort import ShellSort
 from algorithms.merge_sort import MergeSort
+from algorithms.radix_sort import RadixSort
 from algorithms.tree_sort import TreeSort
 from algorithms.bogo_sort import BogoSort
 import pygame.freetype
@@ -188,6 +189,7 @@ class SortingChart:
             QuickSort: "Quick Sort",
             ShellSort: "Shell Sort",
             MergeSort: "Merge Sort",
+            RadixSort: "Radix Sort",
             TreeSort: "Tree Sort",
             BogoSort: "Bogo Sort",
         }
@@ -302,12 +304,13 @@ class Window:
         self.measure_count = value
 
     def measure(self):
+        algorithm = self.sorting_chart.algorithm.__class__()
         length = self.measure_count
         array = [x for x in range(length)]
 
         if length >= 100000:
             n = 3
-        elif isinstance(self.sorting_chart.algorithm, BogoSort) or length >= 10000:
+        elif isinstance(algorithm, BogoSort) or length >= 10000:
             n = 10
         elif length >= 1000:
             n = 100
@@ -319,10 +322,10 @@ class Window:
         start = time.time()
 
         for _ in range(n):
-            self.sorting_chart.algorithm.shuffle(array)
-            self.sorting_chart.algorithm.reset()
-            iterations, comparisons = self.sorting_chart.algorithm.sort(array)
-            if iterations == 2*length:
+            algorithm.shuffle(array)
+            algorithm.reset()
+            iterations, comparisons = algorithm.sort(array)
+            if iterations == -1:
                 n -= 1
             total_iterations += iterations
             total_comparisons += comparisons
@@ -336,7 +339,8 @@ class Window:
         self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}\nComparisons: {total_comparisons // n}"
 
     def set_algorithm(self, algorithm):
-        self.algorithm_label.text = self.sorting_chart.get_algorithms()[algorithm]
+        self.algorithm_label.text = self.sorting_chart.get_algorithms()[
+            algorithm]
         self.sorting_chart.algorithm = algorithm()
 
     def open_page(self, page):

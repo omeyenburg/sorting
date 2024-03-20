@@ -27,7 +27,7 @@ class BogoSort(BaseSort):
         for i in range(2*len(array)):
             if self.is_sorted(array):
                 self.done = True
-                return i, 0
+                return i, i * len(array)
 
             self.shuffle(array)
-        return 2*len(array), 0
+        return -1, 0
