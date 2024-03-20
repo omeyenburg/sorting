@@ -314,16 +314,18 @@ class Window:
         else:
             n = 1000
         total_iterations = 0
+        total_comparisons = 0
 
         start = time.time()
 
         for _ in range(n):
             self.sorting_chart.algorithm.shuffle(array)
             self.sorting_chart.algorithm.reset()
-            iterations = self.sorting_chart.algorithm.sort(array)
+            iterations, comparisons = self.sorting_chart.algorithm.sort(array)
             if iterations == 2*length:
                 n -= 1
             total_iterations += iterations
+            total_comparisons += comparisons
 
         end = time.time()
 
@@ -331,10 +333,7 @@ class Window:
             self.measure_label.text = "Time limit exceeded"
             return
 
-        if total_iterations:
-            self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}"
-        else:
-            self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms"
+        self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}\nComparisons: {total_comparisons // n}"
 
     def set_algorithm(self, algorithm):
         self.algorithm_label.text = self.sorting_chart.get_algorithms()[algorithm]

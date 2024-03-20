@@ -10,6 +10,8 @@ class QuickSort(BaseSort):
         self.index = 0
         self.parts = []
 
+        self.iterations = 0
+
         self.done = False
         self.highlight_sorting = -1
         self.highlight_comparing = -1
@@ -72,6 +74,8 @@ class QuickSort(BaseSort):
         return iterations
     
     def quick_sort(self, array):
+        self.iterations += 1
+
         if len(array) <= 1:
             return array
 
@@ -79,6 +83,8 @@ class QuickSort(BaseSort):
         smaller = []
         greater = []
         for x in array[1:]:
+            self.iterations += 1
+    
             if x <= pivot:
                 smaller.append(x)
             else:
@@ -88,6 +94,6 @@ class QuickSort(BaseSort):
 
     def sort(self, array):
         self.quick_sort(array)
-        return 0
+        return self.iterations, self.iterations
 
 

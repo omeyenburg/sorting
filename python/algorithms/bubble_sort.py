@@ -42,6 +42,6 @@ class BubbleSort(BaseSort):
             for j in range(len(array) - i):
                 if array[j] > array[j + 1]:
                     self.swap(array, j, j + 1)
-                iterations += 1
+            iterations += len(array) - i
         
-        return iterations
+        return iterations, iterations

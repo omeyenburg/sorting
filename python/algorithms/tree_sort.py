@@ -4,6 +4,7 @@ from algorithms.base_sort import BaseSort
 class BinarySortTree:
     def __init__(self):
         self.root = None
+        self.iterations = 0
 
     def append(self, value):
         if self.root is None:
@@ -22,6 +23,8 @@ class Node:
         self.value = value
         self.left = None
         self.right = None
+
+        self.iterations = 0
     
     def append(self, value):
         if value < self.value:
@@ -79,4 +82,4 @@ class TreeSort(BaseSort):
             self.tree.append(value)
 
         array[:] = self.tree.array()
-        return 0
+        return 0, 0

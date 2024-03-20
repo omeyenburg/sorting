@@ -48,5 +48,5 @@ class SelectionSort(BaseSort):
                 iterations += 1
             
             self.swap(array, i, lowest_index)
-        return iterations
+        return iterations, iterations
                 
