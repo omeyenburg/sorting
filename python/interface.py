@@ -6,6 +6,7 @@ from algorithms.shell_sort import ShellSort
 from algorithms.merge_sort import MergeSort
 from algorithms.radix_sort import RadixSort
 from algorithms.tree_sort import TreeSort
+from algorithms.heap_sort import HeapSort
 from algorithms.bogo_sort import BogoSort
 import pygame.freetype
 import pygame
@@ -189,8 +190,9 @@ class SortingChart:
             QuickSort: "Quick Sort",
             ShellSort: "Shell Sort",
             MergeSort: "Merge Sort",
-            RadixSort: "Radix Sort",
             TreeSort: "Tree Sort",
+            HeapSort: "Heap Sort",
+            RadixSort: "Radix Sort",
             BogoSort: "Bogo Sort",
         }
 
