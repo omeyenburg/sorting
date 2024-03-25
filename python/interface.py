@@ -157,29 +157,43 @@ class SortingChart:
         self.values = values
         self.algorithm = algorithm()
         self.sorted = False
-        self.paused = True
-        self.iteration_delay = 400
+        # self.paused = True
+        self.iteration_delay = 0.5
         self.cooldown = 0
         self.array = [i for i in values]
 
     def set_speed(self, value):
-        self.iteration_delay = 400 - min(400, value)
+        self.iteration_delay = (1 - value) ** 2
+        self.algorithm.delay = self.iteration_delay
 
-    def set_values(self, value_count):
-        self.values = range(value_count)
+    def set_count(self, count):
+        self.values = range(count)
         self.array = [i for i in self.values]
 
     def toggle_pause(self):
-        self.paused = not self.paused
+        # self.paused = not self.paused
+        self.algorithm.paused = not self.algorithm.paused
 
     def set_paused(self, value):
-        self.paused = value
+        # self.paused = value
+        self.algorithm.paused = value
 
     def reset(self):
-        self.paused = True
+        self.algorithm.paused = True
         self.sorted = False
         self.algorithm.shuffle(self.array)
-        self.algorithm.reset()
+        # self.algorithm.reset()
+
+    def run(self):
+        if self.algorithm.sorted:
+            return
+        
+        if self.algorithm.running:
+            self.algorithm.paused = not self.algorithm.paused
+            return
+        
+        self.algorithm.delay = self.iteration_delay
+        self.algorithm.sort_threaded(self.array)
 
     @staticmethod
     def get_algorithms():
@@ -197,29 +211,35 @@ class SortingChart:
         }
 
     def update(self, window):
-        if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
-            self.cooldown = 0
-            self.algorithm.iter(self.array)
-            if self.algorithm.done:
-                self.sorted = True
+        # if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
+        #    self.cooldown = 0
+        #    self.algorithm.iter(self.array)
+        #    if self.algorithm.done:
+        #        self.sorted = True
+        #if self.algorithm.done:
+        #    self.sorted = True
+        
+        colors = [(45, 227, 32), (33, 161, 252), (161, 69, 247),
+                  (230, 165, 37), (156, 11, 45)]
 
         bar_width = (window.size[0] - 250) // len(self.array)
         bar_height = (window.size[1] - 10) // len(self.array)
-        for i, x in enumerate(self.array):
-            if i == self.algorithm.highlight_sorting:
-                color = (100, 255, 150)
-            elif i == self.algorithm.highlight_comparing:
-                color = (255, 150, 200)
-            elif i in self.algorithm.highlight_sorted:
-                color = (200, 200, 200)
+        for x, y in enumerate(self.array):
+            for i, pos in enumerate(self.algorithm.highlight_colored):
+                if x == pos:
+                    color = colors[i]
+                    break
             else:
-                color = (100, 100, 100)
+                if x in self.algorithm.highlight_sorted:
+                    color = (200, 200, 200)
+                else:
+                    color = (100, 100, 100)
 
             pygame.draw.rect(
                 window.window,
                 color,
-                (245 + bar_width * 0.1 + i * bar_width,
-                 window.size[1] - 5 - bar_height * (x + 1), bar_width * 0.9, bar_height * (x + 1))
+                (245 + bar_width * 0.1 + x * bar_width,
+                 window.size[1] - 5 - bar_height * (y + 1), bar_width * 0.9, bar_height * (y + 1))
             )
 
 
@@ -254,18 +274,13 @@ class Window:
             ),
             Button(
                 "Play/Pause",
-                self.sorting_chart.toggle_pause,
+                self.sorting_chart.run,
                 pos=(0.015, 0.23)
             ),
             Button(
                 "Randomize",
                 self.sorting_chart.reset,
                 pos=(0.015, 0.33)
-            ),
-            Button(
-                "Measure Time",
-                self.measure,
-                pos=(0.015, 0.48)
             ),
             self.measure_label,
             self.sorting_chart,
@@ -277,13 +292,13 @@ class Window:
 
             Label("Options", center=(0.8, 0.2)),
             Label("Sorting Speed", pos=(0.65, 0.3)),
-            Slider(0, 400, 200, (0.65, 0.37), self.sorting_chart.set_speed),
+            Slider(0, 1, 0.5, (0.65, 0.37), self.sorting_chart.set_speed),
             Label("Sorting Numbers", pos=(0.65, 0.5)),
-            Slider(1, 100, 20, (0.65, 0.57),
-                   self.sorting_chart.set_values, show=True, integer=True),
-            Label("Measure Numbers", pos=(0.65, 0.7)),
-            Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
-                   show=True, integer=lambda x: 10 ** x),
+            Slider(1, 1000, 20, (0.65, 0.57),
+                   self.sorting_chart.set_count, show=True, integer=True),
+            #Label("Measure Numbers", pos=(0.65, 0.7)),
+            #Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
+            #       show=True, integer=lambda x: 10 ** x),
 
             Button(
                 "Done",
