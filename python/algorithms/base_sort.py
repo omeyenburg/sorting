@@ -15,14 +15,19 @@ class BaseSort:
         self.sorted = False
         self.running = False
 
+        self.time = 0
+        self.time_last = time.time()
+        self.time_approximation = 0
+
         self.iterations = 0
         self.comparisons = 0
+        self.writes = 0
+        self.reads = 0
 
         self.highlight_colored = ()
         self.highlight_sorted = ()
 
-        self.starting_time = time.time()
-        self.time = 0
+        #self.starting_time = time.time()
 
     def __del__(self):
         if not self.thread is None:
@@ -30,6 +35,9 @@ class BaseSort:
             self.thread.join()
 
     def swap(self, array, first, second):
+        self.reads += 2
+        self.writes += 2
+
         a = array[first]
         array[first] = array[second]
         array[second] = a
@@ -57,9 +65,9 @@ class BaseSort:
             daemon=True,
         )
 
-        self.starting_time = time.time()
         self.running = True
         self.paused = False
+        self.time_last = time.time()
         self.thread.start()
 
     def thread_wait(self):
@@ -67,11 +75,26 @@ class BaseSort:
             raise SystemExit()
 
         if self.paused:
+            time_current = time.time()
+            self.time += time_current - self.time_last
+
             while self.paused:
-                pass
+                if self.abort:
+                    raise SystemExit()
+
+            self.time_last = time.time()
             return
 
         time.sleep(self.delay)
+
+        time_current = time.time()
+        self.time += time_current - self.time_last
+        self.time_last = time_current
+
+    def enumerate(self, iterable):
+        for var in enumerate(iterable):
+            self.reads += 1
+            yield var
 
     @staticmethod
     def shuffle(array):

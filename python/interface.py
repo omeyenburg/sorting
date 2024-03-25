@@ -37,13 +37,18 @@ class Label:
         self.center = center
 
     def update(self, window):
-        text_rect = window.font.get_rect(self.text, size=self.size)
+        if isinstance(self.text, str):
+            lines = self.text.split("\n")
+        else:
+            lines = self.text
+
+        text_rect = window.font.get_rect(max(lines, key=len), size=self.size)
         if not self.pos is None:
             dest = (self.pos[0] * window.size[0], self.pos[1] * window.size[1])
         else:
             dest = (self.center[0] * window.size[0] - text_rect[2] / 2,
                     self.center[1] * window.size[1] - text_rect[3] / 2)
-        for i, line in enumerate(self.text.split("\n")):
+        for i, line in enumerate(lines):
             window.font.render_to(window.window, (dest[0], dest[1] + 20 * i), line,
                                   (255, 255, 255), size=self.size)
 
@@ -187,11 +192,11 @@ class SortingChart:
     def run(self):
         if self.algorithm.sorted:
             return
-        
+
         if self.algorithm.running:
             self.algorithm.paused = not self.algorithm.paused
             return
-        
+
         self.algorithm.delay = self.iteration_delay
         self.algorithm.sort_threaded(self.array)
 
@@ -216,9 +221,21 @@ class SortingChart:
         #    self.algorithm.iter(self.array)
         #    if self.algorithm.done:
         #        self.sorted = True
-        #if self.algorithm.done:
+        # if self.algorithm.done:
         #    self.sorted = True
-        
+
+        if self.algorithm.running and not (self.algorithm.sorted or self.algorithm.paused):
+            self.algorithm.time_approximation += window.delta_time
+            window.stats_label.text = [
+                f"Time:  {self.algorithm.time_approximation: .5f} s",
+                f"Iterations:  {self.algorithm.iterations}",
+                f"Comparisons:  {self.algorithm.comparisons}",
+                f"Array Reads:  {self.algorithm.reads}",
+                f"Array Writes:  {self.algorithm.writes}",
+            ]
+        elif self.algorithm.sorted:
+            window.stats_label.text[0] = f"Time:  {self.algorithm.time: .5f} s"
+
         colors = [(45, 227, 32), (33, 161, 252), (161, 69, 247),
                   (230, 165, 37), (156, 11, 45)]
 
@@ -251,6 +268,7 @@ class Window:
         self.size = (info.current_w / 3 * 2, info.current_h / 5 * 3)
         self.window = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
+        self.delta_time = 0
         self.font = pygame.freetype.SysFont(None, 15)
         self.clicked = False
         pygame.display.set_caption("Sorting Algorithms")
@@ -261,7 +279,7 @@ class Window:
         self.sorting_chart = SortingChart(range(20), SelectionSort)
 
         self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
-        self.measure_label = Label("N/A", pos=(0.015, 0.55))
+        self.stats_label = Label("", pos=(0.015, 0.55))
         self.measure_count = 10
 
         self.page_sorting.add_widgets(
@@ -282,7 +300,7 @@ class Window:
                 self.sorting_chart.reset,
                 pos=(0.015, 0.33)
             ),
-            self.measure_label,
+            self.stats_label,
             self.sorting_chart,
         )
 
@@ -296,8 +314,8 @@ class Window:
             Label("Sorting Numbers", pos=(0.65, 0.5)),
             Slider(1, 1000, 20, (0.65, 0.57),
                    self.sorting_chart.set_count, show=True, integer=True),
-            #Label("Measure Numbers", pos=(0.65, 0.7)),
-            #Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
+            # Label("Measure Numbers", pos=(0.65, 0.7)),
+            # Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
             #       show=True, integer=lambda x: 10 ** x),
 
             Button(
@@ -362,7 +380,7 @@ class Window:
 
     def open_page(self, page):
         self.opened_page = page
-        self.measure_label.text = "N/A"
+        # self.measure_label.text = "N/A"
 
     def events(self):
         if self.clicked:
@@ -401,7 +419,7 @@ class Window:
 
             # Update display
             pygame.display.flip()
-            self.sorting_chart.cooldown += self.clock.tick(60)
+            self.delta_time = self.clock.tick(60) / 1000
 
 
 if __name__ == "__main__":

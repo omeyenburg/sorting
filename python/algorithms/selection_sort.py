@@ -35,11 +35,11 @@ class SelectionSort(BaseSort):
         self.iterations = 0
         self.comparisons = 0
 
-        for i, a in enumerate(array):
+        for i, a in self.enumerate(array):
             lowest_index = i
             lowest_value = a
 
-            for j, b in enumerate(array[i:]):
+            for j, b in self.enumerate(array[i:]):
                 if b < lowest_value:
                     lowest_index = i + j
                     lowest_value = b
@@ -53,5 +53,7 @@ class SelectionSort(BaseSort):
             self.thread_wait()
 
         self.highlight_colored = ()
+        self.sorted = True
+
         return array
                 
