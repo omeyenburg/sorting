@@ -161,7 +161,7 @@ class SortingChart:
     def __init__(self, values, algorithm):
         self.values = values
         self.algorithm = algorithm()
-        self.sorted = False
+        # self.sorted = False
         # self.paused = True
         self.iteration_delay = 0.5
         self.cooldown = 0
@@ -185,8 +185,8 @@ class SortingChart:
         self.algorithm.paused = value
 
     def reset(self):
-        #self.algorithm.paused = True
-        #self.algorithm.sorted = False
+        # self.algorithm.paused = True
+        # self.algorithm.sorted = False
         self.algorithm.shuffle(self.array)
         self.algorithm.reset()
 
@@ -237,8 +237,13 @@ class SortingChart:
         elif self.algorithm.sorted:
             window.stats_label.text[0] = f"Time:  {self.algorithm.time: .5f} s"
 
-        colors = [(45, 227, 32), (33, 161, 252), (161, 69, 247),
-                  (230, 165, 37), (156, 11, 45)]
+        colors = [
+            (45, 227, 32),
+            (33, 161, 252),
+            (161, 69, 247),
+            (230, 165, 37),
+            (156, 11, 45)
+        ]
 
         bar_width = (window.size[0] - 250) // len(self.array)
         bar_height = (window.size[1] - 10) // len(self.array)
@@ -280,7 +285,7 @@ class Window:
         self.sorting_chart = SortingChart(range(20), SelectionSort)
 
         self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
-        self.stats_label = Label("", pos=(0.015, 0.55))
+        self.stats_label = Label([""], pos=(0.015, 0.55))
         self.measure_count = 10
 
         self.page_sorting.add_widgets(
@@ -375,9 +380,10 @@ class Window:
         self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}\nComparisons: {total_comparisons // n}"
 
     def set_algorithm(self, algorithm):
-        self.algorithm_label.text = self.sorting_chart.get_algorithms()[
-            algorithm]
+        name = self.sorting_chart.get_algorithms()[algorithm]
+        self.algorithm_label.text = name
         self.sorting_chart.algorithm = algorithm()
+        self.sorting_chart.algorithm.delay = self.sorting_chart.iteration_delay
 
     def open_page(self, page):
         self.opened_page = page
