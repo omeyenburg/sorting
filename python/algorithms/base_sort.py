@@ -61,6 +61,7 @@ class BaseSort:
         return array
 
     def thread_wait(self):
+        print(self.highlight_group)
         if self.should_abort:
             self.running = False
             raise SystemExit()
