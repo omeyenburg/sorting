@@ -61,7 +61,6 @@ class BaseSort:
         return array
 
     def thread_wait(self):
-        print(self.highlight_group)
         if self.should_abort:
             self.running = False
             raise SystemExit()
@@ -131,7 +130,7 @@ class BaseSort:
     @staticmethod
     def shuffle_reversed(array):
         array.sort(reverse=True)
-        for _ in range(len(array) * 2):
+        for _ in range(len(array) * 10):
             i = random.randint(0, len(array) - 2)
             array[i], array[i+1] = array[i+1], array[i]
 

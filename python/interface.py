@@ -101,60 +101,72 @@ class Button:
 
 
 class Slider:
-    def __init__(self, start, end, value, pos, callback, show=False, integer=False):
-        self.start = start
-        self.end = end
-        self.value = value
+    def __init__(self, _range, pos, callback, show=False, integer=False, out=None):
+        self.start = _range[0]
+        self.end = _range[1]
+        self.value = round(_range[2]) if integer else _range[2]
         self.pos = pos
         self.callback = callback
-        self.float_value = (value - start) / (end - start)
+        self.float_value = (self.value - self.start) / (self.end - self.start)
         self.clicked = False
         self.show = show
         self.integer = integer
-        if self.integer is True:
-            self.value = round(self.value)
-            self.float_value = ((self.value - self.start) /
-                                (self.end - self.start))
-        elif not self.integer is False:
-            self.value = self.integer(round(self.value))
+        self.out = out
 
     def update(self, window):
-        rect = self.pos[0] * window.size[0], self.pos[1] * \
-            window.size[1] - 2, 100, 4
+        rect = (
+            self.pos[0] * window.size[0],
+            self.pos[1] * window.size[1] - 2,
+            100,
+            4,
+        )
         pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
 
         radius = 8
-        circle_pos = (rect[0] + self.float_value *
-                      rect[2], rect[1] + rect[3] / 2)
+        circle_pos = (
+            rect[0] + self.float_value * rect[2],
+            rect[1] + rect[3] / 2
+        )
         mouse_pos = pygame.mouse.get_pos()
 
         if math.dist(circle_pos, mouse_pos) <= radius and window.clicked:
-            self.clicked = (circle_pos[0] - mouse_pos[0],
-                            circle_pos[1] - mouse_pos[1])
+            self.clicked = (
+                circle_pos[0] - mouse_pos[0],
+                circle_pos[1] - mouse_pos[1]
+            )
         elif self.clicked and not any(pygame.mouse.get_pressed()):
             self.clicked = False
-            self.callback(self.value)
+            if self.out is None:
+                self.callback(self.value)
+            else:
+                self.callback(self.out(self.value))
 
         if self.clicked:
             self.float_value = min(
-                1, max(0, (mouse_pos[0] + self.clicked[0] - rect[0]) / rect[2]))
+                1,
+                max(0, (mouse_pos[0] + self.clicked[0] - rect[0]) / rect[2])
+            )
             self.value = (self.start + self.float_value *
                           (self.end - self.start))
-            if self.integer is True:
+
+            if self.integer:
                 self.value = round(self.value)
                 self.float_value = ((self.value - self.start) /
                                     (self.end - self.start))
-            elif not self.integer is False:
-                self.value = self.integer(round(self.value))
             color = (200, 200, 200)
         else:
             color = (150, 150, 150)
 
         pygame.draw.circle(window.window, color, circle_pos, radius)
         if self.show:
+            if self.out is None:
+                text = str(self.value)
+            else:
+                text = str(self.out(self.value))
+
             height = window.font.get_rect("A")[3]
-            window.font.render_to(
-                window.window, (rect[0] + rect[2] + height, rect[1] - height / 2), str(self.value), (255, 255, 255))
+            rect = (rect[0] + rect[2] + height, rect[1] - height / 2)
+            window.font.render_to(window.window, rect, text, (255, 255, 255))
 
 
 class SortingChart:
@@ -162,17 +174,25 @@ class SortingChart:
         self.values = values
         self.algorithm = algorithm()
         self.iteration_delay = 0.5
-        self.cooldown = 0
+        self.shuffle = algorithm.shuffle
         self.array = [i for i in values]
 
     def set_speed(self, value):
-        self.iteration_delay = (1 - value) ** 2
+        self.iteration_delay = value
         self.algorithm.delay = self.iteration_delay
 
     def set_count(self, count):
         self.values = range(count)
         self.array = [i for i in self.values]
         self.algorithm.reset()
+
+    def set_shuffling(self, shuffling):
+        if shuffling == "Normal":
+            self.shuffle = self.algorithm.shuffle
+        elif shuffling == "Slight":
+            self.shuffle = self.algorithm.shuffle_slight
+        elif shuffling == "Reversed":
+            self.shuffle = self.algorithm.shuffle_reversed
 
     def toggle_pause(self):
         self.algorithm.paused = not self.algorithm.paused
@@ -181,11 +201,11 @@ class SortingChart:
         self.algorithm.paused = value
 
     def reset(self):
-        self.algorithm.shuffle(self.array)
+        self.shuffle(self.array)
         self.algorithm.reset()
 
     def run(self):
-        if self.algorithm.sorted:
+        if self.algorithm.sorted or len(self.array) <= 1:
             return
 
         if self.algorithm.running:
@@ -221,14 +241,20 @@ class SortingChart:
                 f"Array Writes:  {self.algorithm.writes}",
             ]
         elif self.algorithm.sorted:
-            window.stats_label.text[0] = f"Time:  {self.algorithm.time: .5f} s"
+            window.stats_label.text = [
+                f"Time:  {self.algorithm.time: .5f} s",
+                f"Iterations:  {self.algorithm.iterations}",
+                f"Comparisons:  {self.algorithm.comparisons}",
+                f"Array Reads:  {self.algorithm.reads}",
+                f"Array Writes:  {self.algorithm.writes}",
+            ]
 
         colors = [
             (45, 227, 32),
             (33, 161, 252),
             (161, 69, 247),
             (230, 165, 37),
-            (156, 11, 45)
+            (156, 11, 45),
         ]
 
         padding = 10
@@ -243,7 +269,7 @@ class SortingChart:
         bar_width = math.ceil(total_bar_width * 0.9)
         space_width = math.floor(total_bar_width * 0.1 / 2) * 2
         total_bar_width = bar_width + space_width
-        bar_height = (window.size[1]) / len(self.array)
+        bar_height = window.size[1] / len(self.array)
 
         surface_size = (
             len(self.array) * total_bar_width,
@@ -301,7 +327,7 @@ class Window:
         self.sorting_chart = SortingChart(range(20), SelectionSort)
 
         self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
-        self.stats_label = Label([""], pos=(0.015, 0.55))
+        self.stats_label = Label([""], pos=(0.015, 0.5))
         self.measure_count = 10
 
         self.page_sorting.add_widgets(
@@ -332,19 +358,35 @@ class Window:
 
             Label("Options", center=(0.8, 0.2)),
             Label("Sorting Speed", pos=(0.65, 0.3)),
-            Slider(0, 1, 0.5, (0.65, 0.37), self.sorting_chart.set_speed),
+            Slider(
+                (0, 1, 0.5),
+                (0.65, 0.37),
+                self.sorting_chart.set_speed,
+                out=lambda val: pow(1 - val, 2),
+            ),
             Label("Sorting Numbers", pos=(0.65, 0.5)),
-            Slider(1, 1000, 20, (0.65, 0.57),
-                   self.sorting_chart.set_count, show=True, integer=True),
-            # Label("Measure Numbers", pos=(0.65, 0.7)),
-            # Slider(0, 5, 1, (0.65, 0.77), self.set_measure_count,
-            #       show=True, integer=lambda x: 10 ** x),
+            Slider(
+                (0, 4, 1),
+                (0.65, 0.57),
+                self.sorting_chart.set_count,
+                show=True,
+                out=lambda var: round(10 ** var),
+            ),
+            Label("Shuffling", pos=(0.65, 0.7)),
+            Slider(
+                (0, 2, 0),
+                (0.65, 0.77),
+                self.sorting_chart.set_shuffling,
+                show=True,
+                integer=True,
+                out=lambda val: ("Normal", "Slight", "Reversed")[val],
+            ),
 
             Button(
                 "Done",
                 lambda: self.open_page(self.page_sorting),
                 center=(0.5, 0.9)
-            )
+            ),
         )
 
         for i, (algorithm, name) in enumerate(SortingChart.get_algorithms().items()):
@@ -417,29 +459,10 @@ class Window:
 
     def run(self):
         while True:
-            # Get events
             self.events()
             self.window.fill((0, 0, 0))
             self.opened_page.update(self)
 
-            # Gear
-            """
-            center = (15, 15)
-            radius = 10
-            points = []
-            for i in range(36):
-                angle = i * math.pi / 18
-                points.append((
-                    round(center[0] + math.cos(angle) *
-                          (radius + radius // 3 * (i // 2 % 2)), 2),
-                    round(center[1] + math.sin(angle) *
-                          (radius + radius // 3 * (i // 2 % 2)), 2)
-                ))
-            pygame.draw.polygon(self.window, (255, 255, 255), points)
-            pygame.draw.circle(self.window, (0, 0, 0), center, radius // 1.5)
-            """
-
-            # Update display
             pygame.display.flip()
             self.delta_time = self.clock.tick(60) / 1000
 
