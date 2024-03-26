@@ -174,6 +174,7 @@ class SortingChart:
     def set_count(self, count):
         self.values = range(count)
         self.array = [i for i in self.values]
+        self.algorithm.reset()
 
     def toggle_pause(self):
         # self.paused = not self.paused
@@ -184,10 +185,10 @@ class SortingChart:
         self.algorithm.paused = value
 
     def reset(self):
-        self.algorithm.paused = True
-        self.sorted = False
+        #self.algorithm.paused = True
+        #self.algorithm.sorted = False
         self.algorithm.shuffle(self.array)
-        # self.algorithm.reset()
+        self.algorithm.reset()
 
     def run(self):
         if self.algorithm.sorted:

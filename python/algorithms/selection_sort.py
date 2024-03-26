@@ -7,7 +7,6 @@ class SelectionSort(BaseSort):
         self.reset()
 
     def reset(self):
-        print(1)
         self.index = 0
         super().reset()
     
@@ -54,6 +53,7 @@ class SelectionSort(BaseSort):
 
         self.highlight_colored = ()
         self.sorted = True
+        self.running = False
 
         return array
                 

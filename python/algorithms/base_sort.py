@@ -6,14 +6,14 @@ import time
 class BaseSort:
     def __init__(self):
         self.delay = None
+        self.thread = None
         self.reset()
 
     def reset(self):
-        self.thread = None
         self.paused = True
-        self.abort = False
         self.sorted = False
         self.running = False
+        self.should_abort = False
 
         self.time = 0
         self.time_last = time.time()
@@ -27,12 +27,15 @@ class BaseSort:
         self.highlight_colored = ()
         self.highlight_sorted = ()
 
-        #self.starting_time = time.time()
+        self.abort()
 
-    def __del__(self):
+    def abort(self):
         if not self.thread is None:
-            self.done = True
+            self.should_abort = True
             self.thread.join()
+            self.thread = None
+            self.should_abort = False
+            self.running = False
 
     def swap(self, array, first, second):
         self.reads += 2
@@ -52,10 +55,9 @@ class BaseSort:
 
     def sort_threaded(self, array):
         if not self.thread is None:
-            self.abort = True
+            self.should_abort = True
             self.thread.join()
-            self.abort = False
-            print("aborted previous thread")
+            self.should_abort = False
 
         self.reset()
 
@@ -71,7 +73,8 @@ class BaseSort:
         self.thread.start()
 
     def thread_wait(self):
-        if self.abort:
+        if self.should_abort:
+            self.running = False
             raise SystemExit()
 
         if self.paused:
@@ -79,7 +82,8 @@ class BaseSort:
             self.time += time_current - self.time_last
 
             while self.paused:
-                if self.abort:
+                if self.should_abort:
+                    self.running = False
                     raise SystemExit()
 
             self.time_last = time.time()
