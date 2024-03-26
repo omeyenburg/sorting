@@ -24,8 +24,8 @@ class BaseSort:
         self.writes = 0
         self.reads = 0
 
-        self.highlight_colored = ()
-        self.highlight_sorted = ()
+        self.highlight_index = ()
+        self.highlight_group = ()
 
         self.abort()
 
@@ -52,8 +52,8 @@ class BaseSort:
         try:
             self.thread_wait()
             self.sort(array)
-            self.highlight_colored = ()
-            self.highlight_sorted = ()
+            self.highlight_index = ()
+            self.highlight_group = ()
             self.sorted = True
         finally:
             self.running = False

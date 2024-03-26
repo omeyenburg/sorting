@@ -2,9 +2,9 @@ from algorithms.base_sort import BaseSort
 
 
 class InsertionSort(BaseSort):
-    def __init__(self):
-        super().__init__()
-        self.reset()
+    #def __init__(self):
+    #    super().__init__()
+    #    self.reset()
 
     """
     def reset_old(self):
@@ -65,7 +65,8 @@ class InsertionSort(BaseSort):
                 self.writes += 1
                 self.iterations += 1
                 self.comparisons += 2
-                self.highlight_colored = (i, j)
+                self.highlight_index = (i, j)
+                self.highlight_group = range(i)
                 self.thread_wait()
             
             array[j] = value

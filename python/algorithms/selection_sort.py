@@ -2,9 +2,9 @@ from algorithms.base_sort import BaseSort
 
 
 class SelectionSort(BaseSort):
-    def __init__(self):
-        super().__init__()
-        self.reset()
+    #def __init__(self):
+    #    super().__init__()
+    #    self.reset()
 
     """
     def iter(self, array):
@@ -39,7 +39,8 @@ class SelectionSort(BaseSort):
                     lowest_value = b
 
                 self.comparisons += 1
-                self.highlight_colored = (i, i+j, lowest_index)
+                self.highlight_index = (i, i+j, lowest_index)
+                self.highlight_group = range(i)
                 self.thread_wait()
 
             self.swap(array, i, lowest_index)

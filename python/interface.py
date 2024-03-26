@@ -254,12 +254,12 @@ class SortingChart:
         surface.fill((20, 20, 20))
 
         for x, y in enumerate(self.array):
-            for i, pos in enumerate(self.algorithm.highlight_colored):
+            for i, pos in enumerate(self.algorithm.highlight_index):
                 if x == pos:
                     color = colors[i]
                     break
             else:
-                if x in self.algorithm.highlight_sorted:
+                if x in self.algorithm.highlight_group:
                     color = (200, 200, 200)
                 else:
                     color = (100, 100, 100)
