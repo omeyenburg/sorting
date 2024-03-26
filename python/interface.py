@@ -161,8 +161,6 @@ class SortingChart:
     def __init__(self, values, algorithm):
         self.values = values
         self.algorithm = algorithm()
-        # self.sorted = False
-        # self.paused = True
         self.iteration_delay = 0.5
         self.cooldown = 0
         self.array = [i for i in values]
@@ -177,16 +175,12 @@ class SortingChart:
         self.algorithm.reset()
 
     def toggle_pause(self):
-        # self.paused = not self.paused
         self.algorithm.paused = not self.algorithm.paused
 
     def set_paused(self, value):
-        # self.paused = value
         self.algorithm.paused = value
 
     def reset(self):
-        # self.algorithm.paused = True
-        # self.algorithm.sorted = False
         self.algorithm.shuffle(self.array)
         self.algorithm.reset()
 
@@ -217,14 +211,6 @@ class SortingChart:
         }
 
     def update(self, window):
-        # if self.cooldown > self.iteration_delay and not (self.paused or self.sorted):
-        #    self.cooldown = 0
-        #    self.algorithm.iter(self.array)
-        #    if self.algorithm.done:
-        #        self.sorted = True
-        # if self.algorithm.done:
-        #    self.sorted = True
-
         if self.algorithm.running and not (self.algorithm.sorted or self.algorithm.paused):
             self.algorithm.time_approximation += window.delta_time
             window.stats_label.text = [
@@ -245,8 +231,28 @@ class SortingChart:
             (156, 11, 45)
         ]
 
-        bar_width = (window.size[0] - 250) // len(self.array)
-        bar_height = (window.size[1] - 10) // len(self.array)
+        padding = 10
+        surface_position = (250, padding)
+
+        blit_size = (
+            window.size[0] - surface_position[0] - padding,
+            window.size[1] - padding * 2
+        )
+
+        total_bar_width = blit_size[0] / len(self.array)
+        bar_width = math.ceil(total_bar_width * 0.9)
+        space_width = math.floor(total_bar_width * 0.1 / 2) * 2
+        total_bar_width = bar_width + space_width
+        bar_height = (window.size[1]) / len(self.array)
+
+        surface_size = (
+            len(self.array) * total_bar_width,
+            window.size[1]
+        )
+
+        surface = pygame.Surface(surface_size)
+        surface.fill((20, 20, 20))
+
         for x, y in enumerate(self.array):
             for i, pos in enumerate(self.algorithm.highlight_colored):
                 if x == pos:
@@ -258,12 +264,22 @@ class SortingChart:
                 else:
                     color = (100, 100, 100)
 
-            pygame.draw.rect(
-                window.window,
-                color,
-                (245 + bar_width * 0.1 + x * bar_width,
-                 window.size[1] - 5 - bar_height * (y + 1), bar_width * 0.9, bar_height * (y + 1))
+            rect = (
+                x * (bar_width + space_width),
+                0,
+                bar_width,
+                bar_height * (y + 1)
             )
+
+            pygame.draw.rect(surface, color, rect)
+
+        surface = pygame.transform.flip(surface, 0, 1)
+        surface = pygame.transform.scale(surface, blit_size)
+        window.window.blit(
+            surface,
+            surface_position,
+            special_flags=pygame.BLEND_ADD
+        )
 
 
 class Window:
@@ -387,7 +403,6 @@ class Window:
 
     def open_page(self, page):
         self.opened_page = page
-        # self.measure_label.text = "N/A"
 
     def events(self):
         if self.clicked:

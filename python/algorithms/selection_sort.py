@@ -6,10 +6,7 @@ class SelectionSort(BaseSort):
         super().__init__()
         self.reset()
 
-    #def reset(self):
-    #    self.index = 0
-    #    super().reset()
-    
+    """
     def iter(self, array):
         if self.index == len(array):
             self.done = True
@@ -29,10 +26,9 @@ class SelectionSort(BaseSort):
         self.highlight_sorting = self.index
         self.highlight_comparing = lowest_index
         self.highlight_sorted = range(self.index, len(array))
+    """
 
     def sort(self, array):
-        self.thread_wait()
-
         for i, a in self.enumerate(array):
             lowest_index = i
             lowest_value = a
@@ -49,9 +45,4 @@ class SelectionSort(BaseSort):
             self.swap(array, i, lowest_index)
             self.thread_wait()
 
-        self.highlight_colored = ()
-        self.sorted = True
-        self.running = False
-
         return array
-                

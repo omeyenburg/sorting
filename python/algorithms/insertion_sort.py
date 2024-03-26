@@ -6,6 +6,7 @@ class InsertionSort(BaseSort):
         super().__init__()
         self.reset()
 
+    """
     def reset_old(self):
         self.index = 0
 
@@ -50,10 +51,9 @@ class InsertionSort(BaseSort):
             array[j] = value
         
         return iterations, iterations
+    """
     
     def sort(self, array):
-        self.thread_wait()
-
         for i, value in self.enumerate(array):
             j = i
 
@@ -72,9 +72,5 @@ class InsertionSort(BaseSort):
 
             self.writes += 1
             self.thread_wait()
-
-        self.highlight_colored = ()
-        self.sorted = True
-        self.running = False
 
         return array
