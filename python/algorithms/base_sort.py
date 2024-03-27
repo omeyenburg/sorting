@@ -1,6 +1,8 @@
 import threading
 import random
+import psutil
 import time
+import os
 
 
 class BaseSort:
@@ -11,7 +13,7 @@ class BaseSort:
         self.thread = None
         self.status = "Running"
         self.reset()
-        
+
         self.variants = self.__class__.variants
         if self.variants:
             self.variant = list(self.variants)[0]
@@ -19,7 +21,7 @@ class BaseSort:
         else:
             self.variant = None
             self.variant_func = None
-        
+
     def reset(self):
         self.paused = True
         self.sorted = False
@@ -35,6 +37,7 @@ class BaseSort:
         self.comparisons = 0
         self.writes = 0
         self.reads = 0
+        self.memory = 0
 
         self.highlight_index = ()
         self.highlight_group = ()
@@ -67,8 +70,8 @@ class BaseSort:
             self.sort(array)
             self.sorted = True
             self.status = "Sorted"
-        except Exception as e:
-            self.status = e.__class__.__name__
+        #except Exception as e:
+        #    self.status = e.__class__.__name__
         finally:
             self.highlight_index = ()
             self.highlight_group = ()
@@ -99,6 +102,14 @@ class BaseSort:
         self.time += time_current - self.time_last
         self.time_last = time_current
 
+        # Memory is shared between threads
+        # TODO:
+        # 1. Replace thread with separate process
+        # 2. Move measurement to main process and use pid to identify child process
+        # pid = os.getpid()
+        # python_process = psutil.Process(pid)
+        # self.memory = python_process.memory_info().rss / 2**20
+
     def abort(self):
         if not self.thread is None:
             self.should_abort = True
@@ -120,7 +131,7 @@ class BaseSort:
             self.reads += 1
             self.iterations += 1
             yield var
-    
+
     @staticmethod
     def check_sorted(array):
         last = array[0] - 1
@@ -149,4 +160,3 @@ class BaseSort:
         for _ in range(len(array) * 10):
             i = random.randint(0, len(array) - 2)
             array[i], array[i+1] = array[i+1], array[i]
-

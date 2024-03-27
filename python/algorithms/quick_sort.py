@@ -34,50 +34,75 @@ class QuickSort(BaseSort):
             self.thread_wait()
             return array
 
-        pivot_index = self.variant_func(self, array, start, stop)
-        pivot = array[pivot_index]
-        smaller = []
-        greater = []
+        """
+        if length < 9:
+            for i in range(start, stop):
+                value = array[i]
+                j = i
 
-        self.comparisons += length + 1
-        self.iterations += length
-        self.writes += length * 2
-        self.reads += length * 2
+                while j > 0 and array[j - 1] > value:
+                    array[j] = array[j - 1]
+                    j -= 1
 
-        for var in array[start:pivot_index]:
-            if var < pivot:
-                smaller.append(var)
+                    self.reads += 2
+                    self.writes += 1
+                    self.iterations += 1
+                    self.comparisons += 2
+                    self.highlight_index = (i, j)
+                    self.highlight_group = range(i)
+                    self.thread_wait()
+                
+                array[j] = value
+
+                self.writes += 1
+                self.thread_wait()
+
+            return array
+        """
+
+        pivot = array[self.variant_func(self, array, start, stop)]
+        smaller = start
+        greater = stop - 1
+
+        while smaller <= greater:
+            self.iterations += 1
+            self.comparisons += 1
+            self.reads += 1
+
+            if array[smaller] <= pivot:
+                smaller += 1
             else:
-                greater.append(var)
-        for var in array[pivot_index + 1:stop]:
-            if var < pivot:
-                smaller.append(var)
-            else:
-                greater.append(var)
+                self.swap(array, smaller, greater)
+                greater -= 1
 
-        array[start:stop] = smaller + [pivot] + greater
+                self.highlight_index = (-1, smaller, greater)
+                self.thread_wait()
 
-        self.highlight_index = (start + len(smaller),)
+        smaller -= 1
+        greater += 1
+        self.swap(array, start, smaller)
+
+        self.highlight_index = (smaller,)
         self.highlight_group = range(start, stop)
         self.thread_wait()
 
-        self.sort(array, start, start + len(smaller))
-        self.sort(array, start + len(smaller) + 1, stop)
+        self.sort(array, start, smaller)
+        self.sort(array, greater, stop)
 
         return array
-
+    
     def pivot_first(self, array, start, stop):
         return start
-    
+
     def pivot_last(self, array, start, stop):
         return stop - 1
-    
+
     def pivot_middle(self, array, start, stop):
         return (start + stop) // 2
-    
+
     def pivot_random(self, array, start, stop):
         return random.randint(start, stop - 1)
-    
+
     def pivot_median_of_three(self, array, start, stop):
         middle = (start + stop) // 2
         if (array[start] > array[middle]) ^ (array[start] > array[stop - 1]):
@@ -86,7 +111,7 @@ class QuickSort(BaseSort):
             return middle
         else:
             return stop - 1
-        
+
     variants = {
         "Pivot = First": pivot_first,
         "Pivot = Last": pivot_last,

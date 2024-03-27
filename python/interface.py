@@ -52,8 +52,8 @@ class Label:
             dest = (self.center[0] * window.size[0] - text_rect[2] / 2,
                     self.center[1] * window.size[1] - text_rect[3] / 2)
         for i, line in enumerate(lines):
-            window.font.render_to(window.window, (dest[0], dest[1] + 20 * i), line,
-                                  (255, 255, 255), size=self.size)
+            color = (255, 100, 100) if "error" in line.lower() else (255, 255, 255)
+            window.font.render_to(window.window, (dest[0], dest[1] + 20 * i), line, color, size=self.size)
 
 
 class Button:
@@ -382,6 +382,7 @@ class SortingChart:
                 f"Array Reads:  {self.algorithm.reads}",
                 f"Array Writes:  {self.algorithm.writes}",
                 f"Status:  {self.algorithm.status}",
+                #f"Memory: {self.algorithm.memory} MB"
             ]
         elif self.algorithm.sorted or self.algorithm.status != "Running":
             window.stats_label.text = [
@@ -391,6 +392,7 @@ class SortingChart:
                 f"Array Reads:  {self.algorithm.reads}",
                 f"Array Writes:  {self.algorithm.writes}",
                 f"Status:  {self.algorithm.status}",
+                #f"Memory: {self.algorithm.memory} MB"
             ]
 
         colors = [
@@ -468,7 +470,7 @@ class Window:
         self.page_sorting = Page()
         self.page_options = Page()
         self.opened_page = self.page_options
-        self.sorting_chart = SortingChart(range(20), SelectionSort)
+        self.sorting_chart = SortingChart(range(10), SelectionSort)
 
         self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
         self.stats_label = Label([], pos=(0.015, 0.5))
