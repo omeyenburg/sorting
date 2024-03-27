@@ -42,6 +42,9 @@ class Label:
         else:
             lines = self.text
 
+        if not lines:
+            return
+
         text_rect = window.font.get_rect(max(lines, key=len), size=self.size)
         if not self.pos is None:
             dest = (self.pos[0] * window.size[0], self.pos[1] * window.size[1])
@@ -74,30 +77,165 @@ class Button:
         mouse_pos = pygame.mouse.get_pos()
         if rect.collidepoint(mouse_pos) or self.clicked:
             if window.clicked or self.clicked:
-                color = (150, 150, 150)
+                if self.keep:
+                    state = "active"
+                else:
+                    state = "click"
+
                 rect[0] += 2
                 rect[1] += 2
                 rect[2] -= 4
                 rect[3] -= 4
+
                 if window.clicked == 5 and not self.clicked:
                     if self.keep:
+                        self.state = "click"
                         for widget in window.opened_page.widgets:
                             if isinstance(widget, Button):
                                 widget.clicked = False
                         self.clicked = True
                     self.callback()
             else:
-                color = (150, 150, 150)
+                state = "hover"
         else:
-            color = (100, 100, 100)
+            state = "normal"
 
-        pygame.draw.rect(window.window, color, rect, border_radius=3)
+        if state == "normal":
+            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.window, (100, 100, 100), rect, 3, border_radius=3)
+        elif state == "hover":
+            pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
+            pygame.draw.rect(window.window, (150, 100, 50), rect, 2, border_radius=3)
+        elif state == "click":
+            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.window, (200, 150, 100), rect, 2, border_radius=3)
+        elif state == "active":
+            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.window, (150, 100, 50), rect, 3, border_radius=3)
 
         text_rect = window.font.get_rect(self.text, size=self.size)
-        dest = (rect.centerx - text_rect[2] //
-                2, rect.centery - text_rect[3] // 2)
-        window.font.render_to(window.window, dest, self.text,
-                              size=self.size, fgcolor=(255, 255, 255))
+        dest = (
+            rect.centerx - text_rect[2] // 2,
+            rect.centery - text_rect[3] // 2,
+        )
+
+        window.font.render_to(
+            window.window,
+            dest,
+            self.text,
+            size=self.size,
+            fgcolor=(255, 255, 255)
+        )
+
+
+class Selection:
+    def __init__(self, options, callback, size=20, pos=None, direction="down"):
+        self.selected = 0
+        self.options = options
+        self.size = size
+        self.pos = pos
+        self.callback = callback
+        self.direction = direction
+        self.opened = False
+
+    def update(self, window):
+        if not self.options:
+            return
+
+        if self.opened:
+            padding = 5
+            button_height = 30
+            size = (200, button_height * len(self.options))
+
+            if self.direction == "down":
+                pos = (
+                    self.pos[0] * window.size[0],
+                    self.pos[1] * window.size[1]
+                )
+            else:
+                pos = (
+                    self.pos[0] * window.size[0],
+                    self.pos[1] * window.size[1] - size[1] + button_height
+                )
+
+            background_rect = pygame.Rect(
+                pos[0] - padding,
+                pos[1] - padding,
+                size[0] + padding * 2,
+                size[1] + padding * 2,
+            )
+            pygame.draw.rect(window.window, (50, 50, 50), background_rect, border_radius=3)
+
+            mouse_pos = pygame.mouse.get_pos()
+            if not background_rect.collidepoint(mouse_pos):
+                self.opened = False
+
+            for i, text in enumerate(self.options):
+                option_rect = pygame.Rect(
+                    pos[0],
+                    pos[1] + button_height * i,
+                    size[0],
+                    button_height,
+                )
+                text_rect = window.font.get_rect(text, size=self.size)
+                dest = (
+                    option_rect.centerx - text_rect[2] // 2,
+                    option_rect.centery - text_rect[3] // 2,
+                )
+
+                window.font.render_to(
+                    window.window,
+                    dest,
+                    text,
+                    size=self.size,
+                    fgcolor=(255, 255, 255)
+                )
+
+                if option_rect.collidepoint(mouse_pos):
+                    if window.clicked == 5:
+                        self.selected = i
+                        self.opened = False
+                        self.callback(text)
+                    
+                    pygame.draw.rect(window.window, (150, 100, 50), option_rect, 2, border_radius=2)
+
+        else:
+            rect = pygame.Rect(self.pos[0] * window.size[0], self.pos[1] * window.size[1], 200, 30)
+            mouse_pos = pygame.mouse.get_pos()
+
+            if rect.collidepoint(mouse_pos):
+                if window.clicked == 5:
+                    self.opened = True
+                    state = "clicked"
+                else:
+                    state = "hover"
+            else:
+                state = "normal"
+
+            if state == "normal":
+                pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
+                pygame.draw.rect(window.window, (100, 100, 100), rect, 3, border_radius=3)
+            elif state == "hover":
+                pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
+                pygame.draw.rect(window.window, (150, 100, 50), rect, 2, border_radius=3)
+            elif state == "click":
+                pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
+                pygame.draw.rect(window.window, (200, 150, 100), rect, 2, border_radius=3)
+            
+            text = self.options[self.selected]
+            text_rect = window.font.get_rect(text, size=self.size)
+            dest = (
+                rect.centerx - text_rect[2] // 2,
+                rect.centery - text_rect[3] // 2,
+            )
+
+            window.font.render_to(
+                window.window,
+                dest,
+                text,
+                size=self.size,
+                fgcolor=(255, 255, 255)
+            )
 
 
 class Slider:
@@ -194,6 +332,10 @@ class SortingChart:
         elif shuffling == "Reversed":
             self.shuffle = self.algorithm.shuffle_reversed
 
+    def set_variant(self, variant):
+        self.algorithm.variant = variant
+        self.algorithm.variant_func = self.algorithm.variants.get(variant, None)
+
     def toggle_pause(self):
         self.algorithm.paused = not self.algorithm.paused
 
@@ -239,14 +381,16 @@ class SortingChart:
                 f"Comparisons:  {self.algorithm.comparisons}",
                 f"Array Reads:  {self.algorithm.reads}",
                 f"Array Writes:  {self.algorithm.writes}",
+                f"Status:  {self.algorithm.status}",
             ]
-        elif self.algorithm.sorted:
+        elif self.algorithm.sorted or self.algorithm.status != "Running":
             window.stats_label.text = [
                 f"Time:  {self.algorithm.time: .5f} s",
                 f"Iterations:  {self.algorithm.iterations}",
                 f"Comparisons:  {self.algorithm.comparisons}",
                 f"Array Reads:  {self.algorithm.reads}",
                 f"Array Writes:  {self.algorithm.writes}",
+                f"Status:  {self.algorithm.status}",
             ]
 
         colors = [
@@ -297,10 +441,10 @@ class SortingChart:
                 bar_height * (y + 1)
             )
 
-            pygame.draw.rect(surface, color, rect)
+            pygame.draw.rect(surface, color, rect, border_radius=1)
 
         surface = pygame.transform.flip(surface, 0, 1)
-        surface = pygame.transform.scale(surface, blit_size)
+        surface = pygame.transform.smoothscale(surface, blit_size)
         window.window.blit(
             surface,
             surface_position,
@@ -327,8 +471,8 @@ class Window:
         self.sorting_chart = SortingChart(range(20), SelectionSort)
 
         self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
-        self.stats_label = Label([""], pos=(0.015, 0.5))
-        self.measure_count = 10
+        self.stats_label = Label([], pos=(0.015, 0.5))
+        self.variant_selection = Selection((), self.sorting_chart.set_variant, pos=(0.015, 0.9), direction="up")
 
         self.page_sorting.add_widgets(
             self.algorithm_label,
@@ -349,6 +493,7 @@ class Window:
                 pos=(0.015, 0.33)
             ),
             self.stats_label,
+            self.variant_selection,
             self.sorting_chart,
         )
 
@@ -370,7 +515,7 @@ class Window:
                 (0.65, 0.57),
                 self.sorting_chart.set_count,
                 show=True,
-                out=lambda var: round(10 ** var),
+                out=lambda var: max(2, round(10 ** var)),
             ),
             Label("Shuffling", pos=(0.65, 0.7)),
             Slider(
@@ -442,6 +587,7 @@ class Window:
         self.algorithm_label.text = name
         self.sorting_chart.algorithm = algorithm()
         self.sorting_chart.algorithm.delay = self.sorting_chart.iteration_delay
+        self.variant_selection.options = list(self.sorting_chart.algorithm.variants)
 
     def open_page(self, page):
         self.opened_page = page

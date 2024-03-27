@@ -4,16 +4,28 @@ import time
 
 
 class BaseSort:
+    variants = {}
+
     def __init__(self):
         self.delay = None
         self.thread = None
+        self.status = "Running"
         self.reset()
-
+        
+        self.variants = self.__class__.variants
+        if self.variants:
+            self.variant = list(self.variants)[0]
+            self.variant_func = self.variants[self.variant]
+        else:
+            self.variant = None
+            self.variant_func = None
+        
     def reset(self):
         self.paused = True
         self.sorted = False
         self.running = False
         self.should_abort = False
+        self.status = "Ready"
 
         self.time = 0
         self.time_last = time.time()
@@ -45,6 +57,7 @@ class BaseSort:
 
         self.running = True
         self.paused = False
+        self.status = "Running"
         self.time_last = time.time()
         self.thread.start()
 
@@ -52,10 +65,13 @@ class BaseSort:
         try:
             self.thread_wait()
             self.sort(array)
+            self.sorted = True
+            self.status = "Sorted"
+        except Exception as e:
+            self.status = e.__class__.__name__
+        finally:
             self.highlight_index = ()
             self.highlight_group = ()
-            self.sorted = True
-        finally:
             self.running = False
 
         return array
