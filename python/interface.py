@@ -296,12 +296,10 @@ class Slider:
 
 
 class SortingChart:
-    def __init__(self, array_length, algorithm, delay):
+    def __init__(self, array_length, speed):
         self.wrapper = SortProcessWrapper()
         self.wrapper.set_array_length(array_length)
-        self.wrapper.set_delay(delay)
-        self.shuffle = SortProcessWrapper.get_algorithms()[algorithm].shuffle
-        self.shuffle(self.wrapper.array)
+        self.wrapper.set_speed(speed)
         self.array = self.wrapper.array
 
     def set_shuffling(self, shuffling):
@@ -396,13 +394,14 @@ class App:
         self.page_sorting = Page()
         self.page_options = Page()
         self.opened_page = self.page_options
-        self.sorting_chart = SortingChart(10, "Quick Sort", 0.5)
+        self.sorting_chart = SortingChart(10, 0.5)
 
         self.algorithm_label = Label("", pos=(0.015, 0.03))
         self.stats_label = Label([], pos=(0.015, 0.5))
         self.variant_selection = Selection((), self.sorting_chart.wrapper.set_variant, pos=(0.015, 0.9), direction="up")
         
-        self.set_algorithm("Quick Sort")
+        self.set_algorithm("Selection Sort")
+        self.sorting_chart.shuffle(self.sorting_chart.array)
 
         self.page_sorting.add_widgets(
             self.algorithm_label,
@@ -475,9 +474,11 @@ class App:
             self.page_options.add_widget(button)
 
     def set_algorithm(self, name):
-        self.algorithm_label.text = name
         algorithm = SortProcessWrapper.get_algorithms()[name]
+
+        self.algorithm_label.text = name
         self.sorting_chart.wrapper.set_algorithm(algorithm)
+        self.sorting_chart.set_shuffling("Normal")
         self.variant_selection.options = list(self.sorting_chart.wrapper.variants)
 
     def open_page(self, page):

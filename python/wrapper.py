@@ -10,6 +10,7 @@ from algorithms.heap_sort import HeapSort
 from algorithms.bogo_sort import BogoSort
 from multiprocessing import Process, Pipe
 import resource
+import time
 
 
 STATE_IDLE = 0
@@ -144,6 +145,10 @@ class SortProcessWrapper:
     def update(self):
         if not self.state in (STATE_RUNNING, STATE_PAUSED):
             return
+        
+        if not self.process.exitcode is None:
+            time.sleep(1)
+            raise SystemExit("Child process failed.")
 
         while self.process_pipe[0].poll():
             data_recv = self.process_pipe[0].recv()
@@ -176,8 +181,8 @@ class SortProcessWrapper:
         self.delay = delay
         self.process_pipe[0].send({"delay": delay})
 
-    def set_speed(self, speed):
-        self.set_delay((1 - speed) ** 2)
+    def set_speed(self, value):
+        self.set_delay(pow(1 - value, 2))
     
     def set_state(self, state):
         self.state = state
