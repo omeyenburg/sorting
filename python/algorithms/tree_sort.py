@@ -49,19 +49,6 @@ class Node:
 
 
 class TreeSort(BaseSort):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-
-    def reset(self):
-        self.index = 0
-        self.tree = BinarySortTree()
-
-        self.done = False
-        self.highlight_sorting = -1
-        self.highlight_comparing = -1
-        self.highlight_sorted = set()
-
     def iter(self, array):
         if self.index == len(array):
             self.done = True
@@ -78,8 +65,12 @@ class TreeSort(BaseSort):
         self.highlight_sorted = range(self.index, len(array))
 
     def sort(self, array):
-        for value in array:
-            self.tree.append(value)
+        tree = BinarySortTree()
 
-        array[:] = self.tree.array()
-        return 0, 0
+        for value in array:
+            tree.append(value)
+
+        array[:] = tree.array()
+        
+        self.wait()
+        return array

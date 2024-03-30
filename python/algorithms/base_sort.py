@@ -9,6 +9,7 @@ STATE_PAUSED = 1
 STATE_RUNNING = 2
 STATE_SORTED = 3
 STATE_RECURSIONERROR = 4
+STATE_CONNECTIONERROR = 5
 
 
 class BaseSort:
@@ -79,8 +80,8 @@ class BaseSort:
         self._thread_send(self.time)
 
     def _thread_send(self, time):
+        self.connection.send(self.array)
         data_send = {
-            "array": self.array,
             "time": time,
             "memory": self.memory,
             "iterations": self.iterations,

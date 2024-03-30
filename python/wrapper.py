@@ -18,6 +18,7 @@ STATE_PAUSED = 1
 STATE_RUNNING = 2
 STATE_SORTED = 3
 STATE_RECURSIONERROR = 4
+STATE_CONNECTIONERROR = 5
 
 
 def process_measure_default_memory(conn):
@@ -37,6 +38,7 @@ def process_sort(Algorithm, connection, array, delay, variant):
         algorithm.sort(array)
         algorithm.state = STATE_SORTED
     except RecursionError:
+        print("RECURSIONERROR")
         algorithm.state = STATE_RECURSIONERROR
 
     algorithm.highlight_index = ()
@@ -58,7 +60,7 @@ class SortProcessWrapper:
 
         # Process
         self.process = None
-        self.process_pipe = Pipe()
+        self.process_pipe = Pipe(True)
         self.default_memory = self._get_default_memory()
 
     def __del__(self):
@@ -116,7 +118,7 @@ class SortProcessWrapper:
         return int(average_default_memory / n / 1024)
 
     def _process_start(self):
-        args=(
+        args = (
             self.algorithm,
             self.process_pipe[1],
             self.array,
@@ -145,13 +147,26 @@ class SortProcessWrapper:
     def update(self):
         if not self.state in (STATE_RUNNING, STATE_PAUSED):
             return
-        
+
         if not self.process.exitcode is None:
-            time.sleep(1)
+            time.sleep(0.5)
             raise SystemExit("Child process failed.")
 
         while self.process_pipe[0].poll():
-            data_recv = self.process_pipe[0].recv()
+            try:
+                data_recv = self.process_pipe[0].recv()
+            except Exception as e:
+                self._process_abort()
+                self.process_pipe[0].close()
+                self.process_pipe[1].close()
+                self.process_pipe = Pipe()
+                self.state = STATE_CONNECTIONERROR
+                break
+
+            if isinstance(data_recv, list):
+                self.array = data_recv
+                continue
+
             for key, value in data_recv.items():
                 if key == "memory":
                     self.memory = max(0, value - self.default_memory)
@@ -183,11 +198,11 @@ class SortProcessWrapper:
 
     def set_speed(self, value):
         self.set_delay(pow(1 - value, 2))
-    
+
     def set_state(self, state):
         self.state = state
         self.process_pipe[0].send({"state": state})
-    
+
     def pause(self):
         if self.state == STATE_RUNNING:
             self.set_state(STATE_PAUSED)
@@ -197,7 +212,7 @@ class SortProcessWrapper:
         if not var is None:
             self._process_abort()
             self.variant = variant
-    
+
     def get_state_name(self):
         return (
             "Idle",
@@ -205,8 +220,9 @@ class SortProcessWrapper:
             "Running",
             "Sorted",
             "Recursion Error",
+            "Connection Error"
         )[self.state]
-    
+
     def get_stats(self):
         return [
             f"Time:  {self.time: .5f} s",
@@ -217,7 +233,7 @@ class SortProcessWrapper:
             f"Array Writes:  {self.writes}",
             f"State:  {self.get_state_name()}",
         ]
-    
+
     @staticmethod
     def get_algorithms():
         return {
@@ -232,27 +248,3 @@ class SortProcessWrapper:
             "Radix Sort": RadixSort,
             "Bogo Sort": BogoSort,
         }
-
-"""
-if __name__ == '__main__' and 0:
-    wrapper = SortProcessWrapper()
-    wrapper.set_array_length(1000)
-    wrapper.set_delay(0)
-    wrapper.set_algorithm(QuickSort)
-    wrapper.shuffle()
-
-
-    import pygame
-    pygame.init()
-    window = pygame.display.set_mode((300, 200))
-    clock=pygame.time.Clock()
-
-    wrapper.toggle_start()
-    while True:
-        delta_time = clock.tick(60)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                raise SystemExit
-        wrapper.update(delta_time)
-"""
