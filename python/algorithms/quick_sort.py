@@ -19,11 +19,11 @@ class QuickSort(BaseSort):
             self.highlight_group = range(start, stop)
 
             if length <= 1:
-                self.comparisons += 2
+                self.comparisons += 3
                 self.wait()
                 return array
 
-            self.comparisons += 3
+            self.comparisons += 4
             self.reads += 2
 
             if array[start] > array[start + 1]:
@@ -33,6 +33,8 @@ class QuickSort(BaseSort):
 
             self.wait()
             return array
+        
+        self.comparisons += 1
 
         pivot_position = self.variant(self, array, start, stop)
         pivot = array[pivot_position]
@@ -40,9 +42,13 @@ class QuickSort(BaseSort):
         greater = stop - 1
 
         while smaller <= greater:
+            self.iterations += 1
+
             if array[smaller] <= pivot:
+                self.comparisons += 2
                 smaller += 1
             else:
+                self.comparisons += 3
                 if greater == pivot_position:
                     pivot_position = smaller
                 self.swap(array, smaller, greater)
