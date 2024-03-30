@@ -1,122 +1,101 @@
-import threading
+from threading import Thread
+import resource
 import random
-import psutil
 import time
-import os
+
+
+STATE_IDLE = 0
+STATE_PAUSED = 1
+STATE_RUNNING = 2
+STATE_SORTED = 3
+STATE_RECURSIONERROR = 4
 
 
 class BaseSort:
-    variants = {}
-
     def __init__(self):
+        self.connection = None
+        self.array = None
         self.delay = None
-        self.thread = None
-        self.status = "Running"
-        self.reset()
-
-        self.variants = self.__class__.variants
-        if self.variants:
-            self.variant = list(self.variants)[0]
-            self.variant_func = self.variants[self.variant]
-        else:
-            self.variant = None
-            self.variant_func = None
-
-    def reset(self):
-        self.paused = True
-        self.sorted = False
-        self.running = False
-        self.should_abort = False
-        self.status = "Ready"
+        self.variant = None
+        self.update = False
 
         self.time = 0
-        self.time_last = time.time()
-        self.time_approximation = 0
-
+        self.memory = 0
         self.iterations = 0
         self.comparisons = 0
         self.writes = 0
         self.reads = 0
-        self.memory = 0
+        self.state = STATE_RUNNING
 
         self.highlight_index = ()
         self.highlight_group = ()
 
-        self.abort()
-
-    def sort_threaded(self, array):
-        if not self.thread is None:
-            self.should_abort = True
-            self.thread.join()
-            self.should_abort = False
-
-        self.reset()
-
-        self.thread = threading.Thread(
-            target=self.thread_wrapper,
-            args=[array],
+        self.thread = Thread(
+            target=self._thread_update,
             daemon=True,
         )
 
-        self.running = True
-        self.paused = False
-        self.status = "Running"
-        self.time_last = time.time()
-        self.thread.start()
+        self.time_last = time.monotonic()
 
-    def thread_wrapper(self, array):
-        try:
-            self.thread_wait()
-            self.sort(array)
-            self.sorted = True
-            self.status = "Sorted"
-        #except Exception as e:
-        #    self.status = e.__class__.__name__
-        finally:
-            self.highlight_index = ()
-            self.highlight_group = ()
-            self.running = False
+    def wait(self):
+        self.update = True
 
-        return array
+        if self.state == STATE_PAUSED:
+            self.time += time.monotonic() - self.time_last
 
-    def thread_wait(self):
-        if self.should_abort:
-            self.running = False
-            raise SystemExit()
+            while self.state == STATE_PAUSED:
+                time.sleep(0.01)
 
-        if self.paused:
-            time_current = time.time()
-            self.time += time_current - self.time_last
-
-            while self.paused:
-                if self.should_abort:
-                    self.running = False
-                    raise SystemExit()
-
-            self.time_last = time.time()
+            self.time_last = time.monotonic()
             return
 
-        time.sleep(self.delay)
-
-        time_current = time.time()
-        self.time += time_current - self.time_last
+        time_current = time.monotonic()
+        delta_time = time_current - self.time_last
+        self.time += delta_time
         self.time_last = time_current
 
-        # Memory is shared between threads
-        # TODO:
-        # 1. Replace thread with separate process
-        # 2. Move measurement to main process and use pid to identify child process
-        # pid = os.getpid()
-        # python_process = psutil.Process(pid)
-        # self.memory = python_process.memory_info().rss / 2**20
+        time.sleep(max(0, self.delay - delta_time))
 
-    def abort(self):
-        if not self.thread is None:
-            self.should_abort = True
-            self.thread.join()
-            self.thread = None
-            self.should_abort = False
-            self.running = False
+    def _thread_update(self):
+        while True:
+            while self.connection.poll():
+                data_recv = self.connection.recv()
+                for key, value in data_recv.items():
+                    self.__dict__[key] = value
+
+            while not self.update:
+                time.sleep(0.01)
+            
+            if self.state == STATE_PAUSED:
+                continue
+
+            self.memory = self._get_memory()
+            self._thread_send(self.time + time.monotonic() - self.time_last)
+
+            if self.state in (STATE_SORTED, STATE_RECURSIONERROR):
+                break
+        
+        self.memory = self._get_memory()
+        self._thread_send(self.time)
+
+    def _thread_send(self, time):
+        data_send = {
+            "array": self.array,
+            "time": time,
+            "memory": self.memory,
+            "iterations": self.iterations,
+            "comparisons": self.comparisons,
+            "reads": self.reads,
+            "writes": self.writes,
+            "highlight_index": self.highlight_index,
+            "highlight_group": self.highlight_group,
+        }
+        if self.state != STATE_RUNNING:
+            data_send["state"] = self.state
+        self.connection.send(data_send)
+        
+    def _get_memory(self):
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 # Memory in KB
 
     def swap(self, array, first, second):
         self.reads += 2

@@ -1,5 +1,17 @@
-from wrapper import SortProcessWrapper
+from algorithms.selection_sort import SelectionSort
+from algorithms.insertion_sort import InsertionSort
+from algorithms.bubble_sort import BubbleSort
+from algorithms.quick_sort import QuickSort
+from algorithms.shell_sort import ShellSort
+from algorithms.merge_sort import MergeSort
+from algorithms.radix_sort import RadixSort
+from algorithms.tree_sort import TreeSort
+from algorithms.heap_sort import HeapSort
+from algorithms.bogo_sort import BogoSort
+import pygame.freetype
+import pygame
 import math
+import time
 
 
 class Page:
@@ -296,30 +308,92 @@ class Slider:
 
 
 class SortingChart:
-    def __init__(self, array_length, algorithm, delay):
-        self.wrapper = SortProcessWrapper()
-        self.wrapper.set_array_length(array_length)
-        self.wrapper.set_delay(delay)
-        self.shuffle = SortProcessWrapper.get_algorithms()[algorithm].shuffle
-        self.shuffle(self.wrapper.array)
-        self.array = self.wrapper.array
+    def __init__(self, values, algorithm):
+        self.values = values
+        self.algorithm = algorithm()
+        self.iteration_delay = 0.5
+        self.shuffle = algorithm.shuffle
+        self.array = [i for i in values]
+
+    def set_speed(self, value):
+        self.iteration_delay = value
+        self.algorithm.delay = self.iteration_delay
+
+    def set_count(self, count):
+        self.values = range(count)
+        self.array = [i for i in self.values]
+        self.algorithm.reset()
 
     def set_shuffling(self, shuffling):
         if shuffling == "Normal":
-            self.shuffle = self.wrapper.algorithm.shuffle
+            self.shuffle = self.algorithm.shuffle
         elif shuffling == "Slight":
-            self.shuffle = self.wrapper.algorithm.shuffle_slight
+            self.shuffle = self.algorithm.shuffle_slight
         elif shuffling == "Reversed":
-            self.shuffle = self.wrapper.algorithm.shuffle_reversed
+            self.shuffle = self.algorithm.shuffle_reversed
+
+    def set_variant(self, variant):
+        self.algorithm.variant = variant
+        self.algorithm.variant_func = self.algorithm.variants.get(variant, None)
+
+    def toggle_pause(self):
+        self.algorithm.paused = not self.algorithm.paused
+
+    def set_paused(self, value):
+        self.algorithm.paused = value
 
     def reset(self):
-        self.wrapper._process_abort()
-        self.shuffle(self.wrapper.array)
+        self.shuffle(self.array)
+        self.algorithm.reset()
+
+    def run(self):
+        if self.algorithm.sorted or len(self.array) <= 1:
+            return
+
+        if self.algorithm.running:
+            self.algorithm.paused = not self.algorithm.paused
+            return
+
+        self.algorithm.delay = self.iteration_delay
+        self.algorithm.sort_threaded(self.array)
+
+    @staticmethod
+    def get_algorithms():
+        return {
+            SelectionSort: "Selection Sort",
+            InsertionSort: "Insertion Sort",
+            BubbleSort: "Bubble Sort",
+            QuickSort: "Quick Sort",
+            ShellSort: "Shell Sort",
+            MergeSort: "Merge Sort",
+            TreeSort: "Tree Sort",
+            HeapSort: "Heap Sort",
+            RadixSort: "Radix Sort",
+            BogoSort: "Bogo Sort",
+        }
 
     def update(self, window):
-        self.wrapper.update()
-        self.array = self.wrapper.array
-        window.stats_label.text = self.wrapper.get_stats()
+        if self.algorithm.running and not (self.algorithm.sorted or self.algorithm.paused):
+            self.algorithm.time_approximation += window.delta_time
+            window.stats_label.text = [
+                f"Time:  {self.algorithm.time_approximation: .5f} s",
+                f"Iterations:  {self.algorithm.iterations}",
+                f"Comparisons:  {self.algorithm.comparisons}",
+                f"Array Reads:  {self.algorithm.reads}",
+                f"Array Writes:  {self.algorithm.writes}",
+                f"Status:  {self.algorithm.status}",
+                #f"Memory: {self.algorithm.memory} MB"
+            ]
+        elif self.algorithm.sorted or self.algorithm.status != "Running":
+            window.stats_label.text = [
+                f"Time:  {self.algorithm.time: .5f} s",
+                f"Iterations:  {self.algorithm.iterations}",
+                f"Comparisons:  {self.algorithm.comparisons}",
+                f"Array Reads:  {self.algorithm.reads}",
+                f"Array Writes:  {self.algorithm.writes}",
+                f"Status:  {self.algorithm.status}",
+                #f"Memory: {self.algorithm.memory} MB"
+            ]
 
         colors = [
             (45, 227, 32),
@@ -352,12 +426,12 @@ class SortingChart:
         surface.fill((20, 20, 20))
 
         for x, y in enumerate(self.array):
-            for i, pos in enumerate(self.wrapper.highlight_index):
+            for i, pos in enumerate(self.algorithm.highlight_index):
                 if x == pos:
                     color = colors[i]
                     break
             else:
-                if x in self.wrapper.highlight_group:
+                if x in self.algorithm.highlight_group:
                     color = (200, 200, 200)
                 else:
                     color = (100, 100, 100)
@@ -380,7 +454,7 @@ class SortingChart:
         )
 
 
-class App:
+class Window:
     def __init__(self):
         pygame.init()
 
@@ -396,25 +470,23 @@ class App:
         self.page_sorting = Page()
         self.page_options = Page()
         self.opened_page = self.page_options
-        self.sorting_chart = SortingChart(10, "Quick Sort", 0.5)
+        self.sorting_chart = SortingChart(range(10), SelectionSort)
 
-        self.algorithm_label = Label("", pos=(0.015, 0.03))
+        self.algorithm_label = Label("Selection Sort", pos=(0.015, 0.03))
         self.stats_label = Label([], pos=(0.015, 0.5))
-        self.variant_selection = Selection((), self.sorting_chart.wrapper.set_variant, pos=(0.015, 0.9), direction="up")
-        
-        self.set_algorithm("Quick Sort")
+        self.variant_selection = Selection((), self.sorting_chart.set_variant, pos=(0.015, 0.9), direction="up")
 
         self.page_sorting.add_widgets(
             self.algorithm_label,
             Button(
                 "Options",
                 lambda: (self.open_page(self.page_options),
-                         self.sorting_chart.wrapper.pause()),
+                         self.sorting_chart.set_paused(True)),
                 pos=(0.015, 0.13)
             ),
             Button(
                 "Play/Pause",
-                self.sorting_chart.wrapper.toggle_start,
+                self.sorting_chart.run,
                 pos=(0.015, 0.23)
             ),
             Button(
@@ -436,14 +508,14 @@ class App:
             Slider(
                 (0, 1, 0.5),
                 (0.65, 0.37),
-                self.sorting_chart.wrapper.set_delay,
+                self.sorting_chart.set_speed,
                 out=lambda val: pow(1 - val, 2),
             ),
             Label("Sorting Numbers", pos=(0.65, 0.5)),
             Slider(
                 (0, 4, 1),
                 (0.65, 0.57),
-                self.sorting_chart.wrapper.set_array_length,
+                self.sorting_chart.set_count,
                 show=True,
                 out=lambda var: max(2, round(10 ** var)),
             ),
@@ -464,21 +536,60 @@ class App:
             ),
         )
 
-        for i, (name, algorithm) in enumerate(SortProcessWrapper.get_algorithms().items()):
+        for i, (algorithm, name) in enumerate(SortingChart.get_algorithms().items()):
             button = Button(
                 name,
-                lambda name=name: self.set_algorithm(name),
+                lambda a=algorithm: self.set_algorithm(a),
                 center=(0.15 + 0.3 * (i % 2), 0.3 + 0.09 * (i // 2)),
                 keep=True,
-                toggled=self.sorting_chart.wrapper.algorithm==algorithm
+                toggled=isinstance(self.sorting_chart.algorithm, algorithm)
             )
             self.page_options.add_widget(button)
 
-    def set_algorithm(self, name):
+    def set_measure_count(self, value):
+        self.measure_count = value
+
+    def measure(self):
+        algorithm = self.sorting_chart.algorithm.__class__()
+        length = self.measure_count
+        array = [x for x in range(length)]
+
+        if length >= 100000:
+            n = 3
+        elif isinstance(algorithm, BogoSort) or length >= 10000:
+            n = 10
+        elif length >= 1000:
+            n = 100
+        else:
+            n = 1000
+        total_iterations = 0
+        total_comparisons = 0
+
+        start = time.time()
+
+        for _ in range(n):
+            algorithm.shuffle(array)
+            algorithm.reset()
+            iterations, comparisons = algorithm.sort(array)
+            if iterations == -1:
+                n -= 1
+            total_iterations += iterations
+            total_comparisons += comparisons
+
+        end = time.time()
+
+        if not n:
+            self.measure_label.text = "Time limit exceeded"
+            return
+
+        self.measure_label.text = f"Time: {(end - start) / n * 1000:3f}ms\nIterations: {total_iterations // n}\nComparisons: {total_comparisons // n}"
+
+    def set_algorithm(self, algorithm):
+        name = self.sorting_chart.get_algorithms()[algorithm]
         self.algorithm_label.text = name
-        algorithm = SortProcessWrapper.get_algorithms()[name]
-        self.sorting_chart.wrapper.set_algorithm(algorithm)
-        self.variant_selection.options = list(self.sorting_chart.wrapper.variants)
+        self.sorting_chart.algorithm = algorithm()
+        self.sorting_chart.algorithm.delay = self.sorting_chart.iteration_delay
+        self.variant_selection.options = list(self.sorting_chart.algorithm.variants)
 
     def open_page(self, page):
         self.opened_page = page
@@ -505,6 +616,4 @@ class App:
 
 
 if __name__ == "__main__":
-    import pygame.freetype
-    import pygame
-    App().run()
+    Window().run()

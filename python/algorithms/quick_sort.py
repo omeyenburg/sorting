@@ -1,5 +1,4 @@
 from algorithms.base_sort import BaseSort
-# from algorithms.insertion_sort import InsertionSort
 import random
 
 # How to properly implement quick sort:
@@ -20,7 +19,7 @@ class QuickSort(BaseSort):
 
             if length <= 1:
                 self.comparisons += 2
-                self.thread_wait()
+                self.wait()
                 return array
 
             self.comparisons += 3
@@ -28,94 +27,64 @@ class QuickSort(BaseSort):
 
             if array[start] > array[start + 1]:
                 self.swap(array, start, start + 1)
-                self.thread_wait()
+                self.wait()
                 return array
 
-            self.thread_wait()
+            self.wait()
             return array
 
-        """
-        if length < 9:
-            for i in range(start, stop):
-                value = array[i]
-                j = i
-
-                while j > 0 and array[j - 1] > value:
-                    array[j] = array[j - 1]
-                    j -= 1
-
-                    self.reads += 2
-                    self.writes += 1
-                    self.iterations += 1
-                    self.comparisons += 2
-                    self.highlight_index = (i, j)
-                    self.highlight_group = range(i)
-                    self.thread_wait()
-                
-                array[j] = value
-
-                self.writes += 1
-                self.thread_wait()
-
-            return array
-        """
-
-        pivot = array[self.variant_func(self, array, start, stop)]
+        pivot_position = self.variant(self, array, start, stop)
+        pivot = array[pivot_position]
         smaller = start
         greater = stop - 1
 
         while smaller <= greater:
-            self.iterations += 1
-            self.comparisons += 1
-            self.reads += 1
-
             if array[smaller] <= pivot:
                 smaller += 1
             else:
+                if greater == pivot_position:
+                    pivot_position = smaller
                 self.swap(array, smaller, greater)
                 greater -= 1
 
-                self.highlight_index = (-1, smaller, greater)
-                self.thread_wait()
-
+        greater = smaller
         smaller -= 1
-        greater += 1
-        self.swap(array, start, smaller)
+        self.swap(array, pivot_position, smaller)
 
         self.highlight_index = (smaller,)
         self.highlight_group = range(start, stop)
-        self.thread_wait()
+        self.wait()
 
         self.sort(array, start, smaller)
         self.sort(array, greater, stop)
 
         return array
-    
-    def pivot_first(self, array, start, stop):
+
+    def variant_pivot_first(self, array, start, stop):
+        "Pivot = First"
         return start
 
-    def pivot_last(self, array, start, stop):
+    def variant_pivot_last(self, array, start, stop):
+        "Pivot = Last"
         return stop - 1
 
-    def pivot_middle(self, array, start, stop):
+    def variant_pivot_middle(self, array, start, stop):
+        "Pivot = Middle"
         return (start + stop) // 2
 
-    def pivot_random(self, array, start, stop):
+    def variant_pivot_random(self, array, start, stop):
+        "Pivot = Random"
         return random.randint(start, stop - 1)
 
-    def pivot_median_of_three(self, array, start, stop):
+    def variant_pivot_median_of_three(self, array, start, stop):
+        "Pivot = Median"
         middle = (start + stop) // 2
         if (array[start] > array[middle]) ^ (array[start] > array[stop - 1]):
+            self.comparisons += 2
             return start
         elif (array[start] > array[middle]) ^ (array[stop - 1] > array[middle]):
+            self.comparisons += 4
             return middle
         else:
+            self.comparisons += 4
             return stop - 1
-
-    variants = {
-        "Pivot = First": pivot_first,
-        "Pivot = Last": pivot_last,
-        "Pivot = Middle": pivot_middle,
-        "Pivot = Random": pivot_random,
-        "Pivot = Median": pivot_median_of_three,
-    }
