@@ -16,11 +16,11 @@ class InsertionSort(BaseSort):
                 self.comparisons += 2
                 self.highlight_index = (i, j)
                 self.highlight_group = range(i)
-                self.thread_wait()
+                self.wait()
             
             array[j] = value
 
             self.writes += 1
-            self.thread_wait()
+            self.wait()
 
         return array

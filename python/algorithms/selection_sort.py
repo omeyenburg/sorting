@@ -15,9 +15,10 @@ class SelectionSort(BaseSort):
                 self.comparisons += 1
                 self.highlight_index = (i, i+j, lowest_index)
                 self.highlight_group = range(i)
-                self.thread_wait()
+                self.wait()
 
+            self.highlight_index = (i, -1, lowest_index)
             self.swap(array, i, lowest_index)
-            self.thread_wait()
+            self.wait()
 
         return array

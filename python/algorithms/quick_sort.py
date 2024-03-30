@@ -1,6 +1,7 @@
 from algorithms.base_sort import BaseSort
 import random
 
+
 # How to properly implement quick sort:
 # https://www.angelfire.com/pq/jamesbarbetti/articles/sorting/001_QuicksortIsBroken.htm
 

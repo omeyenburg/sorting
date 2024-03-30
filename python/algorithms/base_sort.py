@@ -54,7 +54,7 @@ class BaseSort:
         self.time += delta_time
         self.time_last = time_current
 
-        time.sleep(max(0, self.delay - delta_time))
+        time.sleep(self.delay)
 
     def _thread_update(self):
         while True:
