@@ -358,7 +358,7 @@ class SortingChart:
                     break
             else:
                 if x in self.wrapper.highlight_group:
-                    color = (200, 200, 200)
+                    color = (150, 150, 150)
                 else:
                     color = (100, 100, 100)
 
