@@ -22,4 +22,3 @@ class RadixSort(BaseSort):
             self.wait()
 
         return array
-        

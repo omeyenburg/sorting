@@ -77,14 +77,6 @@ def f():
     print(a, b, b-a)
 
 
-class Test:
-    @classproperty
-    def abc():
-        print("abc!")
-
-Test.abc
-
-
 if __name__ == '__main__' and 0:
     p = Process(target=f)
     p.start()

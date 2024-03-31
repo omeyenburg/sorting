@@ -325,6 +325,11 @@ class SortingChart:
             (161, 69, 247),
             (230, 165, 37),
             (156, 11, 45),
+            (80, 234, 205),
+            (149, 164, 54),
+            (213, 143, 186),
+            (101, 84, 169),
+            (166, 188, 144),
         ]
 
         padding = 10
@@ -352,7 +357,7 @@ class SortingChart:
         for x, y in enumerate(self.array):
             for i, pos in enumerate(self.wrapper.highlight_index):
                 if x == pos:
-                    color = colors[i]
+                    color = colors[i % len(colors)]
                     break
             else:
                 if x in self.wrapper.highlight_group:

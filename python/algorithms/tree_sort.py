@@ -46,31 +46,93 @@ class Node:
         if not self.right is None:
             array.extend(self.right.array())
         return array
+    
+def iter(self, array):
+    if self.index == len(array):
+        self.done = True
+        self.highlight_sorting = -1
+        self.highlight_sorted = set()
+        return
+
+    value = array[self.index]
+    self.tree.append(array[self.index])
+    array[:] = self.tree.array() + array[self.index+1:]
+    self.index += 1
+
+    self.highlight_sorting = array.index(value)
+    self.highlight_sorted = range(self.index, len(array))
+
+def sort(self, array):
+    tree = BinarySortTree()
+
+    for value in array:
+        tree.append(value)
+
+    array[:] = tree.array()
+    
+    self.wait()
+    return array
 
 
 class TreeSort(BaseSort):
-    def iter(self, array):
-        if self.index == len(array):
-            self.done = True
-            self.highlight_sorting = -1
-            self.highlight_sorted = set()
-            return
-
-        value = array[self.index]
-        self.tree.append(array[self.index])
-        array[:] = self.tree.array() + array[self.index+1:]
-        self.index += 1
-
-        self.highlight_sorting = array.index(value)
-        self.highlight_sorted = range(self.index, len(array))
-
     def sort(self, array):
-        tree = BinarySortTree()
+        tree = [None] * len(array) * 2
 
-        for value in array:
-            tree.append(value)
+        def insert(index, pindex):
+            self.iterations += 1
+            self.comparisons += 1
+            self.highlight_index.append(pindex)
+            self.wait()
 
-        array[:] = tree.array()
+            if array[index] < array[pindex]:
+                if tree[2 * pindex] is None:
+                    self.writes += 1
+                    self.reads += 3
+
+                    tree[2 * pindex] = index
+                else:
+                    self.reads += 4
+
+                    insert(index, tree[2 * pindex])
+            else:
+                if tree[2 * pindex + 1] is None:
+                    self.writes += 1
+                    self.reads += 3
+
+                    tree[2 * pindex + 1] = index
+                else:
+                    insert(index, tree[2 * pindex + 1])
+
+                    self.reads += 4
+
+        for i in range(1, len(array)):
+            self.highlight_index = []
+            insert(i, 0)
+
+        out_index = 0
+        old_array = array[:]
         
-        self.wait()
+        def out(index):
+            nonlocal out_index
+
+            if index is None:
+                return
+            
+            self.iterations += 1
+
+            out(tree[2 * index])
+
+            self.highlight_index = (out_index,)
+            self.reads += 4
+            self.writes += 1
+
+            array[out_index] = old_array[index]
+            
+            self.wait()
+            out_index += 1
+
+            out(tree[2 * index + 1])
+        
+        out(0)
+
         return array

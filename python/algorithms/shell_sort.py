@@ -73,6 +73,8 @@ class ShellSort(BaseSort):
 
                     self.comparisons += 2
                     self.iterations += 1
+                    self.reads += 2
+                    self.writes += 1
 
                     self.highlight_index = (j, j - column)
                     self.highlight_group = range(0, len(array), column)

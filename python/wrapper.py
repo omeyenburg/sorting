@@ -145,10 +145,10 @@ class SortProcessWrapper:
         self.reset()
 
     def update(self):
-        if not self.state in (STATE_RUNNING, STATE_PAUSED):
+        if self.process is None or not self.state in (STATE_RUNNING, STATE_PAUSED, STATE_SORTED):
             return
 
-        if not self.process.exitcode is None:
+        if self.process.exitcode:
             time.sleep(0.5)
             raise SystemExit("Child process failed.")
 
