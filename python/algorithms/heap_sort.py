@@ -3,32 +3,33 @@ from algorithms.base_sort import BaseSort
 
 class HeapSort(BaseSort):
     def sort(self, array):
-        for i, value in enumerate(array):
-            array[i] = value
+        heap_size = len(array)
 
+        for i in range(heap_size):
             while i:
+                self.reads += 2
+                self.comparisons += 1
+
                 parent = get_parent(i)
                 if array[parent] >= array[i]:
                     break
 
-                array[parent], array[i] = array[i], array[parent]
+                self.swap(array, i, parent)
 
                 self.highlight_index = (i, parent)
+                self.iterations += 1
                 self.wait()
 
                 i = parent
 
             self.wait()
-
-        heap_size = len(array)
-        while True:
+        
+        while heap_size > 1:
+            i = 0
             heap_size -= 1
             self.swap(array, 0, heap_size)
-            if heap_size == 0:
-                break
 
-            i = 0
-
+            self.comparisons += 1
             self.highlight_index = (0, heap_size)
             self.highlight_group = range(heap_size, len(array))
             self.wait()
@@ -37,13 +38,17 @@ class HeapSort(BaseSort):
             right_child = get_right_child(i)
             
             while left_child < heap_size:
+                self.comparisons += 2
+
                 if right_child >= heap_size:
                     self.swap(array, i, left_child)
                     i = left_child
                 elif array[left_child] > array[right_child]:
+                    self.reads += 2
                     self.swap(array, i, left_child)
                     i = left_child
                 else:
+                    self.reads += 2
                     self.swap(array, i, right_child)
                     i = right_child
 
@@ -54,6 +59,9 @@ class HeapSort(BaseSort):
                 self.wait()
             
             while i != 0:
+                self.comparisons += 2
+                self.reads += 2
+
                 parent = get_parent(i)
                 if array[parent] >= array[i]:
                     break
