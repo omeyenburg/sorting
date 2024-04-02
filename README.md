@@ -1,8 +1,9 @@
 # sorting
 
-## Algorithms
+## Python Interface
 
-This is a small collection of some sorting algorithms and an interface for visualization and comparison in Python.
+### Algorithms
+
 The following algorithms are currently featured:
 
 - Selection Sort
@@ -16,9 +17,9 @@ The following algorithms are currently featured:
 - Radix Sort
 - Bogo Sort
 
-## Measurments
+### Measurments
 
-These values are measured in the interface. Note that time and memory may vary from correct values due to measurement effort and system/computer.
+These values are measured in the interface. Note that time and memory may vary from correct values due to measurement effort and the system/computer.
 
 - Time (in Seconds)
 - Memory (in Kilobytes)
