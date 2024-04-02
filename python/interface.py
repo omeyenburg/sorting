@@ -1,10 +1,10 @@
+import pygame
+import pygame.freetype
 from wrapper import SortProcessWrapper
 import math
 import os
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame.freetype
-import pygame
 
 
 class Page:
@@ -45,8 +45,10 @@ class Label:
             dest = (self.center[0] * window.size[0] - text_rect[2] / 2,
                     self.center[1] * window.size[1] - text_rect[3] / 2)
         for i, line in enumerate(lines):
-            color = (255, 100, 100) if "error" in line.lower() else (255, 255, 255)
-            window.font.render_to(window.surface, (dest[0], dest[1] + 20 * i), line, color, size=self.size)
+            color = (255, 100, 100) if "error" in line.lower() else (
+                255, 255, 255)
+            window.font.render_to(
+                window.surface, (dest[0], dest[1] + 20 * i), line, color, size=self.size)
 
 
 class Button:
@@ -94,17 +96,25 @@ class Button:
             state = "normal"
 
         if state == "normal":
-            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.surface, (100, 100, 100), rect, 3, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50),
+                             rect, border_radius=3)
+            pygame.draw.rect(window.surface, (100, 100, 100),
+                             rect, 3, border_radius=3)
         elif state == "hover":
-            pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
-            pygame.draw.rect(window.surface, (150, 100, 50), rect, 2, border_radius=3)
+            pygame.draw.rect(window.surface, (100, 100, 100),
+                             rect, border_radius=3)
+            pygame.draw.rect(window.surface, (150, 100, 50),
+                             rect, 2, border_radius=3)
         elif state == "click":
-            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.surface, (200, 150, 100), rect, 2, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50),
+                             rect, border_radius=3)
+            pygame.draw.rect(window.surface, (200, 150, 100),
+                             rect, 2, border_radius=3)
         elif state == "active":
-            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.surface, (150, 100, 50), rect, 3, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50),
+                             rect, border_radius=3)
+            pygame.draw.rect(window.surface, (150, 100, 50),
+                             rect, 3, border_radius=3)
 
         text_rect = window.font.get_rect(self.text, size=self.size)
         dest = (
@@ -157,7 +167,8 @@ class Selection:
                 size[0] + padding * 2,
                 size[1] + padding * 2,
             )
-            pygame.draw.rect(window.surface, (50, 50, 50), background_rect, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50),
+                             background_rect, border_radius=3)
 
             mouse_pos = pygame.mouse.get_pos()
             if not background_rect.collidepoint(mouse_pos):
@@ -189,11 +200,13 @@ class Selection:
                         self.selected = i
                         self.opened = False
                         self.callback(text)
-                    
-                    pygame.draw.rect(window.surface, (150, 100, 50), option_rect, 2, border_radius=2)
+
+                    pygame.draw.rect(window.surface, (150, 100, 50),
+                                     option_rect, 2, border_radius=2)
 
         else:
-            rect = pygame.Rect(self.pos[0] * window.size[0], self.pos[1] * window.size[1], 200, 30)
+            rect = pygame.Rect(
+                self.pos[0] * window.size[0], self.pos[1] * window.size[1], 200, 30)
             mouse_pos = pygame.mouse.get_pos()
 
             if rect.collidepoint(mouse_pos):
@@ -206,15 +219,21 @@ class Selection:
                 state = "normal"
 
             if state == "normal":
-                pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
-                pygame.draw.rect(window.surface, (100, 100, 100), rect, 3, border_radius=3)
+                pygame.draw.rect(window.surface, (50, 50, 50),
+                                 rect, border_radius=3)
+                pygame.draw.rect(window.surface, (100, 100, 100),
+                                 rect, 3, border_radius=3)
             elif state == "hover":
-                pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
-                pygame.draw.rect(window.surface, (150, 100, 50), rect, 2, border_radius=3)
+                pygame.draw.rect(
+                    window.surface, (100, 100, 100), rect, border_radius=3)
+                pygame.draw.rect(window.surface, (150, 100, 50),
+                                 rect, 2, border_radius=3)
             elif state == "click":
-                pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
-                pygame.draw.rect(window.surface, (200, 150, 100), rect, 2, border_radius=3)
-            
+                pygame.draw.rect(window.surface, (50, 50, 50),
+                                 rect, border_radius=3)
+                pygame.draw.rect(window.surface, (200, 150, 100),
+                                 rect, 2, border_radius=3)
+
             text = self.options[self.selected]
             text_rect = window.font.get_rect(text, size=self.size)
             dest = (
@@ -251,7 +270,8 @@ class Slider:
             100,
             4,
         )
-        pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
+        pygame.draw.rect(window.surface, (100, 100, 100),
+                         rect, border_radius=3)
 
         radius = 8
         circle_pos = (
@@ -394,8 +414,9 @@ class Window:
 
         self.algorithm_label = Label("", pos=(0.015, 0.03))
         self.stats_label = Label([], pos=(0.015, 0.5))
-        self.variant_selection = Selection((), self.sorting_chart.set_variant, pos=(0.015, 0.9), direction="up")
-        
+        self.variant_selection = Selection(
+            (), self.sorting_chart.set_variant, pos=(0.015, 0.9), direction="up")
+
         self.set_algorithm("Selection Sort")
         self.sorting_chart.set_shuffling("Normal")
         self.sorting_chart.shuffle(self.sorting_chart.array)
@@ -428,6 +449,7 @@ class Window:
             Label("Algorithm", center=(0.3, 0.2)),
 
             Label("Options", center=(0.8, 0.2)),
+
             Label("Sorting Speed", pos=(0.65, 0.3)),
             Slider(
                 (0, 1, 0.5),
@@ -435,22 +457,31 @@ class Window:
                 self.sorting_chart.set_delay,
                 out=lambda val: pow(1 - val, 2),
             ),
-            Label("Sorting Numbers", pos=(0.65, 0.5)),
+            Label("Sorting Numbers", pos=(0.65, 0.45)),
             Slider(
                 (0, 4, 1),
-                (0.65, 0.57),
+                (0.65, 0.52),
                 self.sorting_chart.set_array_length,
                 show=True,
                 out=lambda var: max(2, round(10 ** var)),
             ),
-            Label("Shuffling", pos=(0.65, 0.7)),
+            Label("Shuffling", pos=(0.65, 0.6)),
             Slider(
                 (0, 2, 0),
-                (0.65, 0.77),
+                (0.65, 0.67),
                 self.sorting_chart.set_shuffling,
                 show=True,
                 integer=True,
                 out=lambda val: ("Normal", "Slight", "Reversed")[val],
+            ),
+            Label("Values", pos=(0.65, 0.75)),
+            Slider(
+                (0, 1, 0),
+                (0.65, 0.82),
+                self.sorting_chart.set_value_uniqueness,
+                show=True,
+                integer=True,
+                out=lambda val: ("Unique", "Duplicate")[val],
             ),
 
             Button(
@@ -466,7 +497,7 @@ class Window:
                 lambda name=name: self.set_algorithm(name),
                 center=(0.15 + 0.3 * (i % 2), 0.3 + 0.09 * (i // 2)),
                 keep=True,
-                toggled=self.sorting_chart.algorithm==algorithm
+                toggled=self.sorting_chart.algorithm == algorithm
             )
             self.page_options.add_widget(button)
 
@@ -489,7 +520,7 @@ class Window:
 
             pygame.display.flip()
             self.delta_time = self.clock.tick(60) / 1000
-    
+
     def set_algorithm(self, name):
         algorithm = self.sorting_chart.get_algorithms()[name]
 

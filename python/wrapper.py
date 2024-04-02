@@ -10,6 +10,7 @@ from algorithms.heap_sort import HeapSort
 from algorithms.bogo_sort import BogoSort
 from multiprocessing import Process, Pipe
 import resource
+import random
 import time
 
 
@@ -50,6 +51,7 @@ def process_sort(Algorithm, connection, array, delay, variant):
 class SortProcessWrapper:
     def __init__(self):
         self.array_length = 0
+        self.array_uniqueness = "Unique"
         self.array = []
         self.algorithm = None
         self.variants = {}
@@ -60,18 +62,18 @@ class SortProcessWrapper:
         self.reset()
 
         # Process
-        self.process = None
-        self.process_pipe = Pipe(True)
         self.default_memory = self._get_default_memory()
+        self.process = None
+        self.process_pipe = Pipe()
 
     def __del__(self):
         self._process_abort()
-        self.process_pipe[0].close()
-        self.process_pipe[1].close()
+        # self.process_pipe[0].close()
+        # self.process_pipe[1].close()
 
     def _get_default_memory(self):
         average_default_memory = 0
-        n = 3
+        n = 5
 
         conn1, conn2 = Pipe()
 
@@ -91,7 +93,7 @@ class SortProcessWrapper:
         conn1.close()
         conn2.close()
 
-        # Peak Memory in KiloBytes
+        # Peak Memory in Kilobytes
         return int(average_default_memory / n / 1024)
 
     def _process_start(self):
@@ -120,7 +122,14 @@ class SortProcessWrapper:
 
         self.process = None
         self.reset()
-    
+
+    def _reset_array(self):
+        if self.array_uniqueness == "Unique":
+            self.array = [i for i in range(self.array_length)]
+        else:
+            self.array = [random.randint(0, self.array_length-1)
+                          for _ in range(self.array_length)]
+
     def reset(self):
         self.time = 0
         self.memory = 0
@@ -156,7 +165,8 @@ class SortProcessWrapper:
         while self.process_pipe[0].poll():
             try:
                 data_recv = self.process_pipe[0].recv()
-            except Exception as e:
+            except:
+                print("recreating pipe")
                 self._process_abort()
                 self.process_pipe[0].close()
                 self.process_pipe[1].close()
@@ -187,7 +197,7 @@ class SortProcessWrapper:
             self.variant = tuple(self.variants)[0]
         else:
             self.variant = None
-    
+
     def set_variant(self, variant):
         var = self.variants.get(variant, None)
         if not var is None:
@@ -197,7 +207,7 @@ class SortProcessWrapper:
     def set_array_length(self, length):
         self._process_abort()
         self.array_length = length
-        self.array = [i for i in range(length)]
+        self._reset_array()
 
     def set_delay(self, delay):
         self.delay = delay
@@ -217,6 +227,11 @@ class SortProcessWrapper:
             self.shuffle = SelectionSort.shuffle_slight
         elif shuffling == "Reversed":
             self.shuffle = SelectionSort.shuffle_reversed
+
+    def set_value_uniqueness(self, value):
+        self._process_abort()
+        self.array_uniqueness = value
+        self._reset_array()
 
     def randomize(self):
         self._process_abort()
