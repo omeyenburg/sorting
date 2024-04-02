@@ -54,6 +54,7 @@ class SortProcessWrapper:
         self.algorithm = None
         self.variants = {}
         self.variant = None
+        self.shuffle = SelectionSort.shuffle
 
         # Stats
         self.reset()
@@ -67,30 +68,6 @@ class SortProcessWrapper:
         self._process_abort()
         self.process_pipe[0].close()
         self.process_pipe[1].close()
-
-    def reset(self):
-        self.time = 0
-        self.memory = 0
-        self.iterations = 0
-        self.comparisons = 0
-        self.writes = 0
-        self.reads = 0
-        self.state = STATE_IDLE
-
-        self.highlight_index = ()
-        self.highlight_group = ()
-
-    def toggle_start(self):
-        if self.state in (STATE_SORTED, STATE_RECURSIONERROR):
-            return
-        if self.state == STATE_IDLE:
-            self._process_abort()
-            self._process_start()
-            self.state = STATE_RUNNING
-        elif self.state == STATE_PAUSED:
-            self.set_state(STATE_RUNNING)
-        else:
-            self.set_state(STATE_PAUSED)
 
     def _get_default_memory(self):
         average_default_memory = 0
@@ -143,6 +120,30 @@ class SortProcessWrapper:
 
         self.process = None
         self.reset()
+    
+    def reset(self):
+        self.time = 0
+        self.memory = 0
+        self.iterations = 0
+        self.comparisons = 0
+        self.writes = 0
+        self.reads = 0
+        self.state = STATE_IDLE
+
+        self.highlight_index = ()
+        self.highlight_group = ()
+
+    def toggle_start(self):
+        if self.state in (STATE_SORTED, STATE_RECURSIONERROR):
+            return
+        if self.state == STATE_IDLE:
+            self._process_abort()
+            self._process_start()
+            self.state = STATE_RUNNING
+        elif self.state == STATE_PAUSED:
+            self.set_state(STATE_RUNNING)
+        else:
+            self.set_state(STATE_PAUSED)
 
     def update(self):
         if self.process is None or not self.state in (STATE_RUNNING, STATE_PAUSED, STATE_SORTED):
@@ -186,6 +187,12 @@ class SortProcessWrapper:
             self.variant = tuple(self.variants)[0]
         else:
             self.variant = None
+    
+    def set_variant(self, variant):
+        var = self.variants.get(variant, None)
+        if not var is None:
+            self._process_abort()
+            self.variant = variant
 
     def set_array_length(self, length):
         self._process_abort()
@@ -203,15 +210,21 @@ class SortProcessWrapper:
         self.state = state
         self.process_pipe[0].send({"state": state})
 
+    def set_shuffling(self, shuffling):
+        if shuffling == "Normal":
+            self.shuffle = SelectionSort.shuffle
+        elif shuffling == "Slight":
+            self.shuffle = SelectionSort.shuffle_slight
+        elif shuffling == "Reversed":
+            self.shuffle = SelectionSort.shuffle_reversed
+
+    def randomize(self):
+        self._process_abort()
+        self.shuffle(self.array)
+
     def pause(self):
         if self.state == STATE_RUNNING:
             self.set_state(STATE_PAUSED)
-
-    def set_variant(self, variant):
-        var = self.variants.get(variant, None)
-        if not var is None:
-            self._process_abort()
-            self.variant = variant
 
     def get_state_name(self):
         return (
@@ -248,3 +261,7 @@ class SortProcessWrapper:
             "Radix Sort": RadixSort,
             "Bogo Sort": BogoSort,
         }
+
+    @classmethod
+    def get_algorithm(cls, name):
+        return cls.get_algorithms()[name]

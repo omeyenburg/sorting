@@ -1,5 +1,10 @@
 from wrapper import SortProcessWrapper
 import math
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+import pygame.freetype
+import pygame
 
 
 class Page:
@@ -41,7 +46,7 @@ class Label:
                     self.center[1] * window.size[1] - text_rect[3] / 2)
         for i, line in enumerate(lines):
             color = (255, 100, 100) if "error" in line.lower() else (255, 255, 255)
-            window.font.render_to(window.window, (dest[0], dest[1] + 20 * i), line, color, size=self.size)
+            window.font.render_to(window.surface, (dest[0], dest[1] + 20 * i), line, color, size=self.size)
 
 
 class Button:
@@ -89,17 +94,17 @@ class Button:
             state = "normal"
 
         if state == "normal":
-            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.window, (100, 100, 100), rect, 3, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.surface, (100, 100, 100), rect, 3, border_radius=3)
         elif state == "hover":
-            pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
-            pygame.draw.rect(window.window, (150, 100, 50), rect, 2, border_radius=3)
+            pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
+            pygame.draw.rect(window.surface, (150, 100, 50), rect, 2, border_radius=3)
         elif state == "click":
-            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.window, (200, 150, 100), rect, 2, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.surface, (200, 150, 100), rect, 2, border_radius=3)
         elif state == "active":
-            pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
-            pygame.draw.rect(window.window, (150, 100, 50), rect, 3, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
+            pygame.draw.rect(window.surface, (150, 100, 50), rect, 3, border_radius=3)
 
         text_rect = window.font.get_rect(self.text, size=self.size)
         dest = (
@@ -108,7 +113,7 @@ class Button:
         )
 
         window.font.render_to(
-            window.window,
+            window.surface,
             dest,
             self.text,
             size=self.size,
@@ -152,7 +157,7 @@ class Selection:
                 size[0] + padding * 2,
                 size[1] + padding * 2,
             )
-            pygame.draw.rect(window.window, (50, 50, 50), background_rect, border_radius=3)
+            pygame.draw.rect(window.surface, (50, 50, 50), background_rect, border_radius=3)
 
             mouse_pos = pygame.mouse.get_pos()
             if not background_rect.collidepoint(mouse_pos):
@@ -172,7 +177,7 @@ class Selection:
                 )
 
                 window.font.render_to(
-                    window.window,
+                    window.surface,
                     dest,
                     text,
                     size=self.size,
@@ -185,7 +190,7 @@ class Selection:
                         self.opened = False
                         self.callback(text)
                     
-                    pygame.draw.rect(window.window, (150, 100, 50), option_rect, 2, border_radius=2)
+                    pygame.draw.rect(window.surface, (150, 100, 50), option_rect, 2, border_radius=2)
 
         else:
             rect = pygame.Rect(self.pos[0] * window.size[0], self.pos[1] * window.size[1], 200, 30)
@@ -201,14 +206,14 @@ class Selection:
                 state = "normal"
 
             if state == "normal":
-                pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
-                pygame.draw.rect(window.window, (100, 100, 100), rect, 3, border_radius=3)
+                pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
+                pygame.draw.rect(window.surface, (100, 100, 100), rect, 3, border_radius=3)
             elif state == "hover":
-                pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
-                pygame.draw.rect(window.window, (150, 100, 50), rect, 2, border_radius=3)
+                pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
+                pygame.draw.rect(window.surface, (150, 100, 50), rect, 2, border_radius=3)
             elif state == "click":
-                pygame.draw.rect(window.window, (50, 50, 50), rect, border_radius=3)
-                pygame.draw.rect(window.window, (200, 150, 100), rect, 2, border_radius=3)
+                pygame.draw.rect(window.surface, (50, 50, 50), rect, border_radius=3)
+                pygame.draw.rect(window.surface, (200, 150, 100), rect, 2, border_radius=3)
             
             text = self.options[self.selected]
             text_rect = window.font.get_rect(text, size=self.size)
@@ -218,7 +223,7 @@ class Selection:
             )
 
             window.font.render_to(
-                window.window,
+                window.surface,
                 dest,
                 text,
                 size=self.size,
@@ -246,7 +251,7 @@ class Slider:
             100,
             4,
         )
-        pygame.draw.rect(window.window, (100, 100, 100), rect, border_radius=3)
+        pygame.draw.rect(window.surface, (100, 100, 100), rect, border_radius=3)
 
         radius = 8
         circle_pos = (
@@ -283,7 +288,7 @@ class Slider:
         else:
             color = (150, 150, 150)
 
-        pygame.draw.circle(window.window, color, circle_pos, radius)
+        pygame.draw.circle(window.surface, color, circle_pos, radius)
         if self.show:
             if self.out is None:
                 text = str(self.value)
@@ -292,32 +297,18 @@ class Slider:
 
             height = window.font.get_rect("A")[3]
             rect = (rect[0] + rect[2] + height, rect[1] - height / 2)
-            window.font.render_to(window.window, rect, text, (255, 255, 255))
+            window.font.render_to(window.surface, rect, text, (255, 255, 255))
 
 
-class SortingChart:
+class SortingChart(SortProcessWrapper):
     def __init__(self, array_length, speed):
-        self.wrapper = SortProcessWrapper()
-        self.wrapper.set_array_length(array_length)
-        self.wrapper.set_speed(speed)
-        self.array = self.wrapper.array
-
-    def set_shuffling(self, shuffling):
-        if shuffling == "Normal":
-            self.shuffle = self.wrapper.algorithm.shuffle
-        elif shuffling == "Slight":
-            self.shuffle = self.wrapper.algorithm.shuffle_slight
-        elif shuffling == "Reversed":
-            self.shuffle = self.wrapper.algorithm.shuffle_reversed
-
-    def reset(self):
-        self.wrapper._process_abort()
-        self.shuffle(self.wrapper.array)
+        super().__init__()
+        self.set_array_length(array_length)
+        self.set_speed(speed)
 
     def update(self, window):
-        self.wrapper.update()
-        self.array = self.wrapper.array
-        window.stats_label.text = self.wrapper.get_stats()
+        super().update()
+        window.stats_label.text = self.get_stats()
 
         colors = [
             (45, 227, 32),
@@ -355,12 +346,12 @@ class SortingChart:
         surface.fill((20, 20, 20))
 
         for x, y in enumerate(self.array):
-            for i, pos in enumerate(self.wrapper.highlight_index):
+            for i, pos in enumerate(self.highlight_index):
                 if x == pos:
                     color = colors[i % len(colors)]
                     break
             else:
-                if x in self.wrapper.highlight_group:
+                if x in self.highlight_group:
                     color = (150, 150, 150)
                 else:
                     color = (100, 100, 100)
@@ -376,20 +367,20 @@ class SortingChart:
 
         surface = pygame.transform.flip(surface, 0, 1)
         surface = pygame.transform.smoothscale(surface, blit_size)
-        window.window.blit(
+        window.surface.blit(
             surface,
             surface_position,
             special_flags=pygame.BLEND_ADD
         )
 
 
-class App:
+class Window:
     def __init__(self):
         pygame.init()
 
         info = pygame.display.Info()
         self.size = (info.current_w / 3 * 2, info.current_h / 5 * 3)
-        self.window = pygame.display.set_mode(self.size)
+        self.surface = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
         self.delta_time = 0
         self.font = pygame.freetype.SysFont(None, 15)
@@ -403,9 +394,10 @@ class App:
 
         self.algorithm_label = Label("", pos=(0.015, 0.03))
         self.stats_label = Label([], pos=(0.015, 0.5))
-        self.variant_selection = Selection((), self.sorting_chart.wrapper.set_variant, pos=(0.015, 0.9), direction="up")
+        self.variant_selection = Selection((), self.sorting_chart.set_variant, pos=(0.015, 0.9), direction="up")
         
         self.set_algorithm("Selection Sort")
+        self.sorting_chart.set_shuffling("Normal")
         self.sorting_chart.shuffle(self.sorting_chart.array)
 
         self.page_sorting.add_widgets(
@@ -413,17 +405,17 @@ class App:
             Button(
                 "Options",
                 lambda: (self.open_page(self.page_options),
-                         self.sorting_chart.wrapper.pause()),
+                         self.sorting_chart.pause()),
                 pos=(0.015, 0.13)
             ),
             Button(
                 "Play/Pause",
-                self.sorting_chart.wrapper.toggle_start,
+                self.sorting_chart.toggle_start,
                 pos=(0.015, 0.23)
             ),
             Button(
                 "Randomize",
-                self.sorting_chart.reset,
+                self.sorting_chart.randomize,
                 pos=(0.015, 0.33)
             ),
             self.stats_label,
@@ -440,14 +432,14 @@ class App:
             Slider(
                 (0, 1, 0.5),
                 (0.65, 0.37),
-                self.sorting_chart.wrapper.set_delay,
+                self.sorting_chart.set_delay,
                 out=lambda val: pow(1 - val, 2),
             ),
             Label("Sorting Numbers", pos=(0.65, 0.5)),
             Slider(
                 (0, 4, 1),
                 (0.65, 0.57),
-                self.sorting_chart.wrapper.set_array_length,
+                self.sorting_chart.set_array_length,
                 show=True,
                 out=lambda var: max(2, round(10 ** var)),
             ),
@@ -468,26 +460,15 @@ class App:
             ),
         )
 
-        for i, (name, algorithm) in enumerate(SortProcessWrapper.get_algorithms().items()):
+        for i, (name, algorithm) in enumerate(self.sorting_chart.get_algorithms().items()):
             button = Button(
                 name,
                 lambda name=name: self.set_algorithm(name),
                 center=(0.15 + 0.3 * (i % 2), 0.3 + 0.09 * (i // 2)),
                 keep=True,
-                toggled=self.sorting_chart.wrapper.algorithm==algorithm
+                toggled=self.sorting_chart.algorithm==algorithm
             )
             self.page_options.add_widget(button)
-
-    def set_algorithm(self, name):
-        algorithm = SortProcessWrapper.get_algorithms()[name]
-
-        self.algorithm_label.text = name
-        self.sorting_chart.wrapper.set_algorithm(algorithm)
-        self.sorting_chart.set_shuffling("Normal")
-        self.variant_selection.options = list(self.sorting_chart.wrapper.variants)
-
-    def open_page(self, page):
-        self.opened_page = page
 
     def events(self):
         if self.clicked:
@@ -503,14 +484,22 @@ class App:
     def run(self):
         while True:
             self.events()
-            self.window.fill((0, 0, 0))
+            self.surface.fill((0, 0, 0))
             self.opened_page.update(self)
 
             pygame.display.flip()
             self.delta_time = self.clock.tick(60) / 1000
+    
+    def set_algorithm(self, name):
+        algorithm = self.sorting_chart.get_algorithms()[name]
+
+        self.algorithm_label.text = name
+        self.sorting_chart.set_algorithm(algorithm)
+        self.variant_selection.options = list(self.sorting_chart.variants)
+
+    def open_page(self, page):
+        self.opened_page = page
 
 
 if __name__ == "__main__":
-    import pygame.freetype
-    import pygame
-    App().run()
+    Window().run()
