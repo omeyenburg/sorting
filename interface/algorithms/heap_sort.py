@@ -23,7 +23,7 @@ class HeapSort(BaseSort):
                 i = parent
 
             self.wait()
-        
+
         while heap_size > 1:
             i = 0
             heap_size -= 1
@@ -36,7 +36,7 @@ class HeapSort(BaseSort):
 
             left_child = get_left_child(i)
             right_child = get_right_child(i)
-            
+
             while left_child < heap_size:
                 self.comparisons += 2
 
@@ -55,9 +55,13 @@ class HeapSort(BaseSort):
                 left_child = get_left_child(i)
                 right_child = get_right_child(i)
 
-                self.highlight_index = (-1, -1, i,)
+                self.highlight_index = (
+                    -1,
+                    -1,
+                    i,
+                )
                 self.wait()
-            
+
             while i != 0:
                 self.comparisons += 2
                 self.reads += 2
@@ -65,18 +69,25 @@ class HeapSort(BaseSort):
                 parent = get_parent(i)
                 if array[parent] >= array[i]:
                     break
-                
+
                 self.swap(array, i, parent)
                 i = parent
 
-                self.highlight_index = (-1, -1, i,)
+                self.highlight_index = (
+                    -1,
+                    -1,
+                    i,
+                )
                 self.wait()
+
 
 def get_left_child(i):
     return 2 * i + 1
 
+
 def get_right_child(i):
     return 2 * i + 2
+
 
 def get_parent(i):
     return (i - 1) // 2

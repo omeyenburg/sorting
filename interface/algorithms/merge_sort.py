@@ -20,7 +20,7 @@ class MergeSort(BaseSort):
                 self.swap(array, start, start + 1)
             self.wait()
             return array
-        
+
         self.comparisons += 3
 
         center = start + length // 2

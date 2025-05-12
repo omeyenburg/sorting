@@ -14,5 +14,5 @@ class BubbleSort(BaseSort):
                 self.highlight_index = (j, j + 1)
                 self.highlight_group = range(len(array) - i + 1, len(array))
                 self.wait()
-        
+
         return array

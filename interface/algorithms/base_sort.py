@@ -66,7 +66,7 @@ class BaseSort:
 
             while not self.update:
                 time.sleep(0.01)
-            
+
             if self.state == STATE_PAUSED:
                 continue
 
@@ -75,7 +75,7 @@ class BaseSort:
 
             if self.state in (STATE_SORTED, STATE_RECURSIONERROR):
                 break
-        
+
         self.memory = self._get_memory()
         self._thread_send(self.time)
 
@@ -94,9 +94,9 @@ class BaseSort:
         if self.state != STATE_RUNNING:
             data_send["state"] = self.state
         self.connection.send(data_send)
-        
+
     def _get_memory(self):
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 # Memory in KB
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # Memory in KB
 
     def swap(self, array, first, second):
         self.reads += 2
@@ -132,11 +132,11 @@ class BaseSort:
         array.sort()
         for _ in range(len(array) * 2):
             i = random.randint(0, len(array) - 2)
-            array[i], array[i+1] = array[i+1], array[i]
+            array[i], array[i + 1] = array[i + 1], array[i]
 
     @staticmethod
     def shuffle_reversed(array):
         array.sort(reverse=True)
         for _ in range(len(array) * 10):
             i = random.randint(0, len(array) - 2)
-            array[i], array[i+1] = array[i+1], array[i]
+            array[i], array[i + 1] = array[i + 1], array[i]

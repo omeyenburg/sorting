@@ -33,13 +33,13 @@ class TreeSort(BaseSort):
                     insert(index, tree[2 * pindex + 1])
 
                     self.reads += 4
-        
+
         def out(index):
             nonlocal out_index
 
             if index is None:
                 return
-            
+
             self.iterations += 1
 
             out(tree[2 * index])
@@ -49,7 +49,7 @@ class TreeSort(BaseSort):
             self.writes += 1
 
             array[out_index] = old_array[index]
-            
+
             self.wait()
             out_index += 1
 

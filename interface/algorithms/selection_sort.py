@@ -13,7 +13,7 @@ class SelectionSort(BaseSort):
                     lowest_value = b
 
                 self.comparisons += 1
-                self.highlight_index = (i, i+j, lowest_index)
+                self.highlight_index = (i, i + j, lowest_index)
                 self.highlight_group = range(i)
                 self.wait()
 

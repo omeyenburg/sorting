@@ -10,7 +10,7 @@ class RadixSort(BaseSort):
 
         for i in range(max_length):
             for value in array[:]:
-                sub_arrays[(value + offset) // 10 ** i % 10].append(value)
+                sub_arrays[(value + offset) // 10**i % 10].append(value)
 
                 self.reads += 2
                 self.writes += 1
@@ -33,7 +33,7 @@ class RadixSort(BaseSort):
             self.wait()
 
         return array
-    
+
     def variant_hide_collecting(*_):
         "Hide Collecting"
         return
@@ -42,6 +42,6 @@ class RadixSort(BaseSort):
         "Show Collecting"
         start = 0
         for j in range(10):
-            array[start:start+len(sub_arrays[j])] = sub_arrays[j]
+            array[start : start + len(sub_arrays[j])] = sub_arrays[j]
             start = len(sub_arrays[j])
         self.wait()

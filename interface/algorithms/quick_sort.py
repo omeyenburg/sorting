@@ -33,7 +33,7 @@ class QuickSort(BaseSort):
 
             self.wait()
             return array
-        
+
         self.comparisons += 1
 
         pivot_position = self.variant(self, array, start, stop)
