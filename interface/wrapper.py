@@ -127,8 +127,10 @@ class SortProcessWrapper:
         if self.array_uniqueness == "Unique":
             self.array = [i for i in range(self.array_length)]
         else:
-            self.array = [random.randint(0, self.array_length-1)
-                          for _ in range(self.array_length)]
+            self.array = [
+                random.randint(0, self.array_length - 1)
+                for _ in range(self.array_length)
+            ]
 
     def reset(self):
         self.time = 0
@@ -155,16 +157,27 @@ class SortProcessWrapper:
             self.set_state(STATE_PAUSED)
 
     def update(self):
-        if self.process is None or not self.state in (STATE_RUNNING, STATE_PAUSED, STATE_SORTED):
+        if self.process is None or not self.state in (
+            STATE_RUNNING,
+            STATE_PAUSED,
+            STATE_SORTED,
+        ):
             return
 
         if self.process.exitcode:
             time.sleep(0.5)
             raise SystemExit("Child process failed.")
 
+        array_data = None
+        dict_data = None
         while self.process_pipe[0].poll():
             try:
                 data_recv = self.process_pipe[0].recv()
+                if isinstance(data_recv, list):
+                    array_data = data_recv
+                else:
+                    dict_data = data_recv
+
             except:
                 print("recreating pipe")
                 self._process_abort()
@@ -174,11 +187,10 @@ class SortProcessWrapper:
                 self.state = STATE_CONNECTIONERROR
                 break
 
-            if isinstance(data_recv, list):
-                self.array = data_recv
-                continue
-
-            for key, value in data_recv.items():
+        if array_data is not None:
+            self.array = array_data
+        if dict_data is not None:
+            for key, value in dict_data.items():
                 if key == "memory":
                     self.memory = max(0, value - self.default_memory)
                 else:
@@ -248,7 +260,7 @@ class SortProcessWrapper:
             "Running",
             "Sorted",
             "Recursion Error",
-            "Connection Error"
+            "Connection Error",
         )[self.state]
 
     def get_stats(self):
