@@ -8,7 +8,7 @@ from algorithms.radix_sort import RadixSort
 from algorithms.tree_sort import TreeSort
 from algorithms.heap_sort import HeapSort
 from algorithms.bogo_sort import BogoSort
-from multiprocessing import Process, Pipe
+from multiprocessing import Process, Manager, Pipe
 import resource
 import random
 import time
@@ -27,9 +27,10 @@ def process_measure_default_memory(conn):
     conn.send(memory)
 
 
-def process_sort(Algorithm, connection, array, delay, variant):
+def process_sort(Algorithm, connection, shared_dict, array, delay, variant):
     algorithm = Algorithm()
     algorithm.connection = connection
+    algorithm.shared_dict = shared_dict
     algorithm.array = array
     algorithm.delay = delay
     algorithm.variant = variant
@@ -64,12 +65,11 @@ class SortProcessWrapper:
         # Process
         self.default_memory = self._get_default_memory()
         self.process = None
+        self.shared_dict = Manager().dict()
         self.process_pipe = Pipe()
 
     def __del__(self):
         self._process_abort()
-        # self.process_pipe[0].close()
-        # self.process_pipe[1].close()
 
     def _get_default_memory(self):
         average_default_memory = 0
@@ -100,6 +100,7 @@ class SortProcessWrapper:
         args = (
             self.algorithm,
             self.process_pipe[1],
+            self.shared_dict,
             self.array,
             self.delay,
             self.variants.get(self.variant, None),
@@ -157,7 +158,7 @@ class SortProcessWrapper:
             self.set_state(STATE_PAUSED)
 
     def update(self):
-        if self.process is None or not self.state in (
+        if self.process is None or self.state not in (
             STATE_RUNNING,
             STATE_PAUSED,
             STATE_SORTED,
@@ -168,33 +169,13 @@ class SortProcessWrapper:
             time.sleep(0.5)
             raise SystemExit("Child process failed.")
 
-        array_data = None
-        dict_data = None
-        while self.process_pipe[0].poll():
-            try:
-                data_recv = self.process_pipe[0].recv()
-                if isinstance(data_recv, list):
-                    array_data = data_recv
-                else:
-                    dict_data = data_recv
-
-            except:
-                print("recreating pipe")
-                self._process_abort()
-                self.process_pipe[0].close()
-                self.process_pipe[1].close()
-                self.process_pipe = Pipe()
-                self.state = STATE_CONNECTIONERROR
-                break
-
-        if array_data is not None:
-            self.array = array_data
-        if dict_data is not None:
-            for key, value in dict_data.items():
-                if key == "memory":
-                    self.memory = max(0, value - self.default_memory)
-                else:
-                    self.__dict__[key] = value
+        for key, value in self.shared_dict.items():
+            if key == "memory":
+                self.memory = max(0, value - self.default_memory)
+            if key == "array":
+                self.array = value
+            else:
+                self.__dict__[key] = value
 
     def set_algorithm(self, algorithm):
         self._process_abort()
@@ -212,7 +193,7 @@ class SortProcessWrapper:
 
     def set_variant(self, variant):
         var = self.variants.get(variant, None)
-        if not var is None:
+        if var is not None:
             self._process_abort()
             self.variant = variant
 

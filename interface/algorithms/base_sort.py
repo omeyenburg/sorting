@@ -15,13 +15,14 @@ STATE_CONNECTIONERROR = 5
 class BaseSort:
     def __init__(self):
         self.connection = None
+        self.shared_dict = None
         self.array = None
         self.delay = None
         self.variant = None
         self.update = False
 
         self.time = 0
-        self.memory = 0
+        self.raw_memory = 0
         self.iterations = 0
         self.comparisons = 0
         self.writes = 0
@@ -70,30 +71,29 @@ class BaseSort:
             if self.state == STATE_PAUSED:
                 continue
 
-            self.memory = self._get_memory()
+            self.raw_memory = self._get_memory()
             self._thread_send(self.time + time.monotonic() - self.time_last)
 
             if self.state in (STATE_SORTED, STATE_RECURSIONERROR):
                 break
 
-        self.memory = self._get_memory()
+        self.raw_memory = self._get_memory()
         self._thread_send(self.time)
 
     def _thread_send(self, time):
-        self.connection.send(self.array)
-        data_send = {
-            "time": time,
-            "memory": self.memory,
-            "iterations": self.iterations,
-            "comparisons": self.comparisons,
-            "reads": self.reads,
-            "writes": self.writes,
-            "highlight_index": self.highlight_index,
-            "highlight_group": self.highlight_group,
-        }
+        self.shared_dict["time"] = time
+        self.shared_dict["raw_memory"] = self.raw_memory
+        self.shared_dict["iterations"] = self.iterations
+        self.shared_dict["comparisons"] = self.comparisons
+        self.shared_dict["reads"] = self.reads
+        self.shared_dict["writes"] = self.writes
+        self.shared_dict["highlight_index"] = self.highlight_index
+        self.shared_dict["highlight_group"] = self.highlight_group
+
         if self.state != STATE_RUNNING:
-            data_send["state"] = self.state
-        self.connection.send(data_send)
+            self.shared_dict["state"] = self.state
+
+        self.shared_dict["array"] = self.array
 
     def _get_memory(self):
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # Memory in KB
