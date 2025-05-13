@@ -1,10 +1,8 @@
-import pygame
-import pygame.freetype
 from wrapper import SortProcessWrapper
+import pygame.freetype
+import pygame
 import math
 import os
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 
 class Page:
