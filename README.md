@@ -1,6 +1,6 @@
-# sorting visualizer
+# sorting-visualizer
 
-A program to visualize some sorting algorithms, because who doesn't like to watch some sorting algorithms do their work?
+A program to visualize some sorting algorithms, because who doesn't like to watch some sorting algorithms do their work?<br>
 Also some stats are measured in the interface, without focus on accuracy regarding time and memory usage.
 
 ## Usage
