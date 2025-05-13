@@ -1,10 +1,17 @@
-# sorting
+# sorting visualizer
 
-## Python Interface
+A program to visualize some sorting algorithms, because who doesn't like to watch some sorting algorithms do their work?
+Also some stats are measured in the interface, without focus on accuracy regarding time and memory usage.
 
-### Algorithms
+## Usage
 
-The following algorithms are currently featured:
+Python3 and Pygame are required to run this program.
+```sh
+python3 src/main.py
+```
+Apply some options, select our favorite sorting algorithm and watch it in action!
+
+## Algorithms featured
 
 - Selection Sort
 - Insertion Sort
@@ -16,14 +23,3 @@ The following algorithms are currently featured:
 - Heap Sort
 - Radix Sort
 - Bogo Sort
-
-### Measurments
-
-These values are measured in the interface. Note that time and memory may vary from correct values due to measurement effort and the system/computer.
-
-- Time (in Seconds)
-- Memory (in Kilobytes)
-- Iterations
-- Comparisons
-- Array Reads
-- Array Writes
